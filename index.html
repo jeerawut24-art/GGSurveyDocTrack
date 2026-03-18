@@ -573,11 +573,9 @@
         <div class="form-group">
           <label>วันที่ SVE รับเอกสาร</label>
           <input type="date" class="form-input" id="f_sveDate" />
+          <input type="hidden" id="f_sveDateOrig" />
         </div>
-        <div class="form-group">
-          <label>เวลาที่ SVE รับ (HH:MM)</label>
-          <input type="time" class="form-input" id="f_sveTime" />
-        </div>
+
         <div class="form-group">
           <label>วันที่ SVE ส่งออก</label>
           <input type="date" class="form-input" id="f_sendDate" />
@@ -683,6 +681,17 @@ const PAGE_SIZE = 30;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // แปลงวันที่จาก Google Sheets ให้เป็น YYYY-MM-DD
+function extractTime(val) {
+  if (!val) return '';
+  // ดึงเวลาจาก string ตรงๆ ด้วย regex ไม่ผ่าน new Date (หลีกเลี่ยง timezone shift)
+  // รองรับ: "Wed Mar 17 2026 14:30:00 GMT+0700", "2026-03-17 14:30:00", "2026-03-17T14:30:00"
+  const m = val.match(/(\d{2}):(\d{2})(?::\d{2})?(?:\s*GMT|$|\s*$)/);
+  if (m) {
+    return (m[1] === '00' && m[2] === '00') ? '' : `${m[1]}:${m[2]}`;
+  }
+  return '';
+}
+
 function normalizeDate(val) {
   if (!val) return '';
   // ถ้าเป็น YYYY-MM-DD อยู่แล้ว
@@ -714,7 +723,7 @@ function gsToDoc(rec) {
     docDate:    normalizeDate(rec.docDate),
     cscDate:    normalizeDate(rec.cscDate),
     sveDate:    normalizeDate(rec.sveDate),
-    sveTime:    rec.sveTime    || '',
+    sveTime:    extractTime(rec.sveDate),
     sendDate:   normalizeDate(rec.sendDate),
     status:     rec.status     || 'Under Review',
     action:     rec.action     || '',
@@ -1076,7 +1085,7 @@ function openAddModal() {
   editingId = null;
   document.getElementById('modalTitle').textContent = 'เพิ่มเอกสารใหม่';
   ['f_docName','f_docNumber','f_notes','f_action'].forEach(id => document.getElementById(id).value = '');
-  ['f_docDate','f_cscDate','f_sveDate','f_sveTime','f_sendDate'].forEach(id => document.getElementById(id).value = '');
+  ['f_docDate','f_cscDate','f_sveDate','f_sendDate','f_sveDateOrig'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f_status').value = 'Under Review';
   openModal('docModal');
   setTimeout(() => document.getElementById('f_docName').focus(), 200);
@@ -1092,7 +1101,8 @@ function openEditModal(id) {
   document.getElementById('f_docDate').value = d.docDate || '';
   document.getElementById('f_cscDate').value = d.cscDate || '';
   document.getElementById('f_sveDate').value = d.sveDate || '';
-  document.getElementById('f_sveTime').value = d.sveTime || '';
+  document.getElementById('f_sveDateOrig').value = d.sveDate || '';
+
   document.getElementById('f_sendDate').value = d.sendDate || '';
   document.getElementById('f_status').value = d.status;
   document.getElementById('f_notes').value = d.notes || '';
@@ -1112,8 +1122,18 @@ function saveDoc() {
     docNumber,
     docDate:  document.getElementById('f_docDate').value,
     cscDate:  document.getElementById('f_cscDate').value,
-    sveDate:  document.getElementById('f_sveDate').value,
-    sveTime:  document.getElementById('f_sveTime').value,
+    sveDate:  (() => {
+      const d = document.getElementById('f_sveDate').value;
+      if (!d) return '';
+      // ถ้า Edit และวันที่ไม่เปลี่ยน → คงเวลาเดิมไว้
+      const origSveDate = document.getElementById('f_sveDateOrig').value;
+      if (editingId && origSveDate && origSveDate.startsWith(d)) return origSveDate;
+      // สร้างใหม่ หรือวันที่เปลี่ยน → จับเวลา ณ ตอนนี้
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0');
+      const mm = String(now.getMinutes()).padStart(2,'0');
+      return `${d} ${hh}:${mm}:00`;
+    })(),
     sendDate: document.getElementById('f_sendDate').value,
     status:   document.getElementById('f_status').value,
     notes:    document.getElementById('f_notes').value.trim(),
