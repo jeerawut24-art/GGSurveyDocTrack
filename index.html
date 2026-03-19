@@ -136,10 +136,8 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-[100] backdrop-blur-md bg-white/80 transition-colors">
     <div class="max-w-[1800px] mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-5">
-        <div onclick="document.getElementById('logoInput').click()" class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-500 transition-all group">
-          <img id="logoImg" src="" class="hidden w-full h-full object-contain p-1">
-          <i id="logoIcon" class="ph-bold ph-upload-simple text-slate-400 group-hover:text-blue-500 text-xl"></i>
-          <input type="file" id="logoInput" class="hidden" accept="image/*" onchange="handleLogo(this)">
+        <div class="w-12 h-12 bg-white dark:bg-white rounded-xl flex items-center justify-center overflow-hidden border border-slate-200">
+          <img src="https://lh3.googleusercontent.com/pw/AP1GczM_tCq_mX9TBy739L_4S7T-G_I2lqZ_qW4B9yV6l7r9l3z4-8z7m5e3m1b0l=w100-h100" alt="SVE Logo" class="w-full h-full object-contain p-1">
         </div>
         <div>
           <h1 class="iso-header text-lg font-extrabold tracking-tight text-slate-800">DOCUMENT <span class="text-blue-600">CONTROL</span> CENTER</h1>
@@ -148,21 +146,18 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <!-- Theme Toggle Button -->
         <button onclick="toggleTheme()" class="btn-icon bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100 transition-all" title="สลับโหมดสว่าง/มืด">
           <i id="themeIcon" class="ph-bold ph-moon-stars text-lg"></i>
         </button>
 
-        <!-- แถบ AI ANALYTICAL -->
         <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
            <span class="ai-orb"></span>
            <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">AI Enabled</span>
         </div>
 
-        <!-- แถบ PUBLIC ACCESS -->
         <div id="authInfo" class="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">View Only</div>
         
-        <button id="authBtn" onclick="toggleLogin()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-all shadow-md uppercase">
+        <button id="authBtn" onclick="handleAuthClick()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-all shadow-md uppercase">
           <i class="ph-bold ph-lock-key"></i> Login
         </button>
       </div>
@@ -209,29 +204,28 @@
 
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors shadow-sm">
-      <div class="flex items-center gap-2 flex-1 min-w-[350px]">
-        <div class="relative flex-1 max-w-md">
+      <div class="flex items-center gap-3 flex-1">
+        <div class="relative flex-1">
           <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="search" onkeyup="applyFilter()" placeholder="ค้นหาเอกสาร..." class="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none transition-all">
+          <input type="text" id="search" onkeyup="applyFilter()" placeholder="ค้นหาตามเลขที่เอกสาร หรือ รายการเอกสาร..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none transition-all focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
           <button onclick="clearSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-all"><i class="ph-bold ph-x-circle"></i></button>
         </div>
-        <select id="userFilter" onchange="applyFilter()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none cursor-pointer">
-          <option value="">ทั้งหมด</option>
+        <select id="userFilter" onchange="applyFilter()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none cursor-pointer min-w-[180px] font-semibold">
+          <option value="">กรองตามชื่อผู้รับผิดชอบ</option>
         </select>
       </div>
 
       <div class="flex items-center gap-2">
-        <button onclick="syncData()" title="รีเฟรชการซิงค์ข้อมูล" class="btn-icon bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-blue-600 transition-all shadow-sm">
+        <button onclick="syncData()" title="รีเฟรชข้อมูล" class="btn-icon bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-blue-600 transition-all shadow-sm">
           <i class="ph-bold ph-arrows-clockwise text-lg"></i>
         </button>
         <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
         
-        <!-- ส่วนส่งออก (นำคำอธิบายกลับมา) -->
         <div class="flex gap-1.5">
-          <button onclick="exportResult('pdf')" title="ส่งออกข้อมูลเป็นไฟล์ PDF" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
+          <button onclick="exportResult('pdf')" title="PDF" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
             <i class="ph-fill ph-file-pdf"></i> PDF
           </button>
-          <button onclick="exportResult('image')" title="ส่งออกหน้าจอเป็นไฟล์รูปภาพ PNG" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
+          <button onclick="exportResult('image')" title="PNG" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
             <i class="ph-fill ph-image"></i> PNG
           </button>
         </div>
@@ -258,16 +252,32 @@
               <th style="width: 120px">ระยะเวลา (วัน)</th>
               <th style="width: 150px">สถานะ</th>
               <th style="width: 250px">หมายเหตุ</th>
-              <th class="admin-only hidden text-right pr-6" style="width: 100px">จัดการ</th>
+              <th id="adminHeader" class="hidden text-right pr-6" style="width: 100px">จัดการ</th>
             </tr>
           </thead>
           <tbody id="tableBody">
-             <tr><td colspan="11" class="text-center py-40 text-slate-400 font-black uppercase tracking-widest animate-pulse">Initialising ISO Database Connection...</td></tr>
+              <tr><td colspan="11" class="text-center py-40 text-slate-400 font-black uppercase tracking-widest animate-pulse">Initialising ISO Database Connection...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[300] hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[24px] overflow-hidden shadow-2xl p-8 border border-white/10">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="ph-bold ph-shield-check"></i></div>
+        <h3 class="text-xl font-extrabold text-slate-800 dark:text-white">Admin Authentication</h3>
+        <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">กรุณากรอกรหัสผ่านเพื่อเข้าถึงโหมดจัดการ</p>
+      </div>
+      <input type="password" id="loginPass" placeholder="••••••••" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-center text-lg tracking-widest outline-none mb-4 focus:border-blue-500">
+      <div class="flex gap-3">
+        <button onclick="closeLoginModal()" class="flex-1 py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all uppercase text-[10px]">Cancel</button>
+        <button onclick="processLogin()" class="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-blue-500/30">Verify</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ISO Form Modal -->
   <div id="docModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
@@ -372,7 +382,7 @@
             </td>
             <td>${displayStatus}</td>
             <td class="text-[11px] text-slate-400 italic">${doc.note || '-'}</td>
-            <td class="admin-only ${isLogged ? '' : 'hidden'} text-right">
+            <td class="${isLogged ? '' : 'hidden'} text-right">
               <button onclick="openDocModal(${realIdx})" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-all">
                 <i class="ph-bold ph-note-pencil text-xl"></i>
               </button>
@@ -417,13 +427,34 @@
 
     function clearSearch() { document.getElementById('search').value = ""; applyFilter(); }
 
-    function toggleLogin() {
+    // --- New Login Logic ---
+    function handleAuthClick() {
       if (!isLogged) {
-        const p = prompt("Enter Administrator Access Key:");
-        if (p === SECRET) { isLogged = true; sessionStorage.setItem('iso_auth', 'true'); updateAuthUI(); } 
-        else if (p !== null) alert("ACCESS DENIED");
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginPass').focus();
       } else {
-        if (confirm("Sign out?")) { isLogged = false; sessionStorage.removeItem('iso_auth'); location.reload(); }
+        if (confirm("ต้องการออกจากระบบจัดการใช่หรือไม่?")) { 
+          isLogged = false; 
+          sessionStorage.removeItem('iso_auth'); 
+          location.reload(); 
+        }
+      }
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    function processLogin() {
+      const pass = document.getElementById('loginPass').value;
+      if (pass === SECRET) {
+        isLogged = true;
+        sessionStorage.setItem('iso_auth', 'true');
+        updateAuthUI();
+        closeLoginModal();
+      } else {
+        alert("รหัสผ่านไม่ถูกต้อง");
       }
     }
 
@@ -431,21 +462,9 @@
       document.getElementById('authInfo').innerText = "ISO ADMIN";
       document.getElementById('authInfo').className = "text-[9px] font-black text-blue-500 uppercase bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800";
       document.getElementById('addBtn').classList.remove('hidden');
+      document.getElementById('adminHeader').classList.remove('hidden');
       document.getElementById('authBtn').innerHTML = '<i class="ph-bold ph-sign-out"></i> Logout';
       renderTable();
-    }
-
-    function handleLogo(input) {
-      if (input.files && input.files[0]) {
-        const r = new FileReader();
-        r.onload = e => {
-          document.getElementById('logoImg').src = e.target.result;
-          document.getElementById('logoImg').classList.remove('hidden');
-          document.getElementById('logoIcon').classList.add('hidden');
-          localStorage.setItem('sve_iso_logo', e.target.result);
-        };
-        r.readAsDataURL(input.files[0]);
-      }
     }
 
     function openDocModal(idx = null) {
@@ -484,7 +503,7 @@
         custodian: document.getElementById('f_owner').value,
         date: document.getElementById('f_date').value,
         csc_received: document.getElementById('f_csc_rec').value,
-        sve_received: document.getElementById('f_sve_received').value,
+        sve_received: document.getElementById('f_sve_rec').value,
         sve_sent: document.getElementById('f_sve_sent').value || '-',
         status: document.getElementById('f_status').value,
         note: document.getElementById('f_note').value
@@ -494,14 +513,14 @@
         const res = await fetch(G_SCRIPT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
         const result = await res.json();
         if (result.status === 'success') { closeDocModal(); await syncData(); }
-      } catch (err) { alert("ERROR"); }
+      } catch (err) { alert("ERROR ในการเชื่อมต่อฐานข้อมูล"); }
       finally { btn.disabled = false; btn.innerText = "Commit Data to Cloud Database"; }
     }
 
     function populateUsers() {
       const sel = document.getElementById('userFilter');
       const users = [...new Set(masterData.map(d => d.custodian || d.responsible).filter(u => u))].sort();
-      sel.innerHTML = '<option value="">ทั้งหมด</option>' + users.map(u => `<option value="${u}">${u.toUpperCase()}</option>`).join('');
+      sel.innerHTML = '<option value="">กรองตามชื่อผู้รับผิดชอบ</option>' + users.map(u => `<option value="${u}">${u.toUpperCase()}</option>`).join('');
     }
 
     function exportResult(type) {
@@ -525,15 +544,14 @@
         document.documentElement.classList.add('dark');
         document.getElementById('themeIcon').className = 'ph-bold ph-sun text-xl';
       }
-      const logo = localStorage.getItem('sve_iso_logo');
-      if (logo) {
-        document.getElementById('logoImg').src = logo;
-        document.getElementById('logoImg').classList.remove('hidden');
-        document.getElementById('logoIcon').classList.add('hidden');
-      }
       if (sessionStorage.getItem('iso_auth') === 'true') { isLogged = true; updateAuthUI(); }
       syncData();
     };
+
+    // Add enter key listener for login
+    document.getElementById('loginPass').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') processLogin();
+    });
   </script>
 </body>
 </html>
