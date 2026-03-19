@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVE DOCUMENT CONTROL SYSTEM</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root {
+      --iso-blue: #1e293b;
+      --iso-accent: #3b82f6;
+      --bg-soft: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #334155;
+      --border-color: #e2e8f0;
+      --table-header: #f1f5f9;
+    }
+
+    /* Dark Mode variables */
+    .dark {
+      --bg-soft: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f1f5f9;
+      --border-color: #334155;
+      --table-header: #334155;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-soft);
+      color: var(--text-main);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .iso-header { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    /* ระบบแจ้งเตือนล่าช้า ISO Standard */
+    @keyframes pulse-red {
+      0%, 100% { color: #ef4444; opacity: 1; }
+      50% { color: #f87171; opacity: 0.5; }
+    }
+    .status-delayed {
+      animation: pulse-red 1s infinite;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ตารางแบบไม่ตัดคำ (Full Content) */
+    .iso-table-container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--table-header);
+      color: var(--text-main);
+      opacity: 0.8;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 16px;
+      text-align: left;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+    .dark tr:hover td { background: #1e293b; }
+    tr:hover td { background: #f8fafc; }
+
+    /* Card สไตล์ ISO */
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .stat-card:hover { transform: translateY(-4px); border-color: var(--iso-accent); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1); }
+    .stat-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+
+    .btn-icon {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; transition: all 0.2s;
+    }
+    
+    /* AI Pulse Effect */
+    .ai-orb {
+      width: 8px; height: 8px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+      animation: ai-pulse 2s infinite;
+    }
+    @keyframes ai-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* Custom Inputs for Dark Mode */
+    .dark input, .dark select, .dark textarea {
+      background-color: #334155 !important;
+      border-color: #475569 !important;
+      color: white !important;
+    }
+    .dark .bg-white { background-color: var(--card-bg) !important; }
+    .dark .bg-slate-50 { background-color: #334155 !important; }
+    .dark .text-slate-800 { color: #f1f5f9 !important; }
+    .dark .text-slate-700 { color: #cbd5e1 !important; }
+    .dark .text-slate-400 { color: #94a3b8 !important; }
+    .dark .border-slate-200 { border-color: #334155 !important; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-[100] backdrop-blur-md bg-white/80 transition-colors">
+    <div class="max-w-[1800px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-5">
+        <div onclick="document.getElementById('logoInput').click()" class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-500 transition-all group">
+          <img id="logoImg" src="" class="hidden w-full h-full object-contain p-1">
+          <i id="logoIcon" class="ph-bold ph-upload-simple text-slate-400 group-hover:text-blue-500 text-xl"></i>
+          <input type="file" id="logoInput" class="hidden" accept="image/*" onchange="handleLogo(this)">
+        </div>
+        <div>
+          <h1 class="iso-header text-lg font-extrabold tracking-tight text-slate-800">DOCUMENT <span class="text-blue-600">CONTROL</span> CENTER</h1>
+          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">SVE Quality Management System</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Theme Toggle Button -->
+        <button onclick="toggleTheme()" class="btn-icon bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100 transition-all" title="สลับโหมดสว่าง/มืด">
+          <i id="themeIcon" class="ph-bold ph-moon-stars text-lg"></i>
+        </button>
+
+        <!-- แถบ AI ANALYTICAL -->
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
+           <span class="ai-orb"></span>
+           <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">AI Enabled</span>
+        </div>
+
+        <!-- แถบ PUBLIC ACCESS -->
+        <div id="authInfo" class="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">View Only</div>
+        
+        <button id="authBtn" onclick="toggleLogin()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-all shadow-md uppercase">
+          <i class="ph-bold ph-lock-key"></i> Login
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1800px] mx-auto p-6 space-y-6">
+    
+    <!-- สถิติ (Cards) -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div onclick="setFilter('ALL')" id="card-ALL" class="stat-card active">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl flex items-center justify-center text-2xl"><i class="ph-fill ph-files"></i></div>
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Documents</span>
+        </div>
+        <div class="text-4xl font-extrabold text-slate-800" id="stat-all">0</div>
+        <div class="mt-2 text-[10px] font-bold text-slate-400">รายการเอกสารทั้งหมดในระบบ</div>
+      </div>
+      <div onclick="setFilter('กำลังตรวจสอบ')" id="card-process" class="stat-card">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-2xl flex items-center justify-center text-2xl"><i class="ph-fill ph-hourglass-high"></i></div>
+          <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">In Progress</span>
+        </div>
+        <div class="text-4xl font-extrabold text-slate-800" id="stat-process">0</div>
+        <div class="mt-2 text-[10px] font-bold text-slate-400">อยู่ระหว่างการดำเนินการตรวจสอบ</div>
+      </div>
+      <div onclick="setFilter('อนุมัติแล้ว')" id="card-success" class="stat-card">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl"><i class="ph-fill ph-check-circle"></i></div>
+          <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Approved</span>
+        </div>
+        <div class="text-4xl font-extrabold text-slate-800" id="stat-success">0</div>
+        <div class="mt-2 text-[10px] font-bold text-slate-400">เอกสารที่ผ่านการอนุมัติแล้ว</div>
+      </div>
+      <div onclick="setFilter('ยกเลิก')" id="card-cancel" class="stat-card">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-2xl flex items-center justify-center text-2xl"><i class="ph-fill ph-x-circle"></i></div>
+          <span class="text-[10px] font-black text-rose-600 uppercase tracking-widest">Cancelled</span>
+        </div>
+        <div class="text-4xl font-extrabold text-slate-800" id="stat-cancel">0</div>
+        <div class="mt-2 text-[10px] font-bold text-slate-400">เอกสารที่ถูกยกเลิกหรือไม่อนุมัติ</div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors shadow-sm">
+      <div class="flex items-center gap-2 flex-1 min-w-[350px]">
+        <div class="relative flex-1 max-w-md">
+          <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="search" onkeyup="applyFilter()" placeholder="ค้นหาเอกสาร..." class="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none transition-all">
+          <button onclick="clearSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-all"><i class="ph-bold ph-x-circle"></i></button>
+        </div>
+        <select id="userFilter" onchange="applyFilter()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none cursor-pointer">
+          <option value="">ทั้งหมด</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="syncData()" title="รีเฟรชการซิงค์ข้อมูล" class="btn-icon bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-blue-600 transition-all shadow-sm">
+          <i class="ph-bold ph-arrows-clockwise text-lg"></i>
+        </button>
+        <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+        
+        <!-- ส่วนส่งออก (นำคำอธิบายกลับมา) -->
+        <div class="flex gap-1.5">
+          <button onclick="exportResult('pdf')" title="ส่งออกข้อมูลเป็นไฟล์ PDF" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
+            <i class="ph-fill ph-file-pdf"></i> PDF
+          </button>
+          <button onclick="exportResult('image')" title="ส่งออกหน้าจอเป็นไฟล์รูปภาพ PNG" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[10px] font-black transition-all">
+            <i class="ph-fill ph-image"></i> PNG
+          </button>
+        </div>
+
+        <button id="addBtn" onclick="openDocModal()" class="hidden flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-lg transition-all shadow-md uppercase tracking-wider">
+          <i class="ph-bold ph-plus-circle"></i> เพิ่มใหม่
+        </button>
+      </div>
+    </div>
+
+    <!-- ตารางเอกสาร -->
+    <div class="iso-table-container transition-colors" id="printableArea">
+      <div class="overflow-x-auto">
+        <table id="docTable">
+          <thead>
+            <tr>
+              <th style="width: 150px">เลขที่เอกสาร</th>
+              <th style="width: 350px">รายการเอกสาร</th>
+              <th style="width: 180px">ผู้รับผิดชอบหลัก</th>
+              <th style="width: 130px">วันที่เอกสาร</th>
+              <th style="width: 130px">วันที่ CSC รับ</th>
+              <th style="width: 130px">วันที่ SVE รับ</th>
+              <th style="width: 130px">วันที่ SVE ส่งออก</th>
+              <th style="width: 120px">ระยะเวลา (วัน)</th>
+              <th style="width: 150px">สถานะ</th>
+              <th style="width: 250px">หมายเหตุ</th>
+              <th class="admin-only hidden text-right pr-6" style="width: 100px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+             <tr><td colspan="11" class="text-center py-40 text-slate-400 font-black uppercase tracking-widest animate-pulse">Initialising ISO Database Connection...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ISO Form Modal -->
+  <div id="docModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[32px] overflow-hidden shadow-2xl border border-white/10">
+      <div class="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+        <div>
+          <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white" id="modalTitle">Document Management</h3>
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">อัปเดตข้อมูลตามมาตรฐานควบคุมเอกสาร SVE</p>
+        </div>
+        <button onclick="closeDocModal()" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"><i class="ph-bold ph-x text-2xl"></i></button>
+      </div>
+      
+      <form id="isoForm" onsubmit="handleIsoSubmit(event)" class="p-8 grid grid-cols-2 gap-6">
+        <input type="hidden" id="editIdx">
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Document Number</label><input type="text" id="f_id" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none"></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Custodian</label><input type="text" id="f_owner" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none"></div>
+        <div class="col-span-2 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Description</label><textarea id="f_title" required rows="3" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none resize-none"></textarea></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Doc Date</label><input type="date" id="f_date" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm"></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">CSC Receipt</label><input type="date" id="f_csc_rec" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm"></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">SVE Receipt (Start)</label><input type="date" id="f_sve_rec" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm"></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">SVE Completion</label><input type="date" id="f_sve_sent" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm"></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</label><select id="f_status" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold"><option value="กำลังตรวจสอบ">🟡 REVIEWING</option><option value="อนุมัติแล้ว">🟢 APPROVED</option><option value="ยกเลิก">🔴 CANCELLED</option></select></div>
+        <div class="col-span-1 space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Notes</label><input type="text" id="f_note" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none"></div>
+        <div class="col-span-2 pt-4"><button type="submit" id="submitBtn" class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-500 text-[12px] uppercase tracking-[0.2em] shadow-xl transition-all">Commit Data to Cloud Database</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const G_SCRIPT = "https://script.google.com/macros/s/AKfycbzgQ-_Gn3ZmEwhXFjN3JzrTZY8Y-fZt9TP0vw8elL8HsgO0MTAhLYvamCSGB6iosJfsQQ/exec";
+    const SECRET = "SVE2026";
+    let masterData = [];
+    let currentFilter = 'ALL';
+    let isLogged = false;
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        icon.className = 'ph-bold ph-moon-stars text-xl';
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.classList.add('dark');
+        icon.className = 'ph-bold ph-sun text-xl';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    async function syncData() {
+      const tb = document.getElementById('tableBody');
+      tb.innerHTML = `<tr><td colspan="11" class="text-center py-40 text-slate-400 font-black uppercase tracking-widest animate-pulse">Syncing Cloud Intelligence...</td></tr>`;
+      try {
+        const res = await fetch(G_SCRIPT);
+        const json = await res.json();
+        if (json.status === 'success') {
+          masterData = json.data || [];
+          populateUsers();
+          updateDashboard();
+          applyFilter();
+        }
+      } catch (e) {
+        tb.innerHTML = `<tr><td colspan="11" class="text-center py-40 text-rose-500 font-bold">CRITICAL: CONNECTION FAILED</td></tr>`;
+      }
+    }
+
+    function calculateTAT(recDate, sentDate) {
+      if (!recDate || recDate === '-' || recDate === '') return 0;
+      const start = new Date(recDate);
+      const end = (sentDate && sentDate !== '-' && sentDate !== '') ? new Date(sentDate) : new Date();
+      if (isNaN(start.getTime())) return 0;
+      const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+      return Math.max(0, diff);
+    }
+
+    function renderTable(data = masterData) {
+      const tb = document.getElementById('tableBody');
+      if (!data.length) {
+        tb.innerHTML = `<tr><td colspan="11" class="text-center py-40 text-slate-300 font-bold uppercase tracking-widest">No Documents Found</td></tr>`;
+        return;
+      }
+      tb.innerHTML = data.map((doc, i) => {
+        const tat = calculateTAT(doc.sve_received, doc.sve_sent);
+        const realIdx = masterData.indexOf(doc);
+        const isLate = tat > 14 && doc.status === 'กำลังตรวจสอบ';
+        const displayStatus = isLate ? `<span class="status-delayed"><i class="ph-bold ph-warning-octagon"></i> ล่าช้า (${doc.status})</span>` : getBadge(doc.status);
+
+        return `
+          <tr>
+            <td class="font-extrabold text-blue-600">${doc.id || '-'}</td>
+            <td class="font-semibold text-slate-700 leading-relaxed">${doc.title || '-'}</td>
+            <td class="text-slate-500 font-black text-[10px] uppercase tracking-wider">${doc.custodian || doc.responsible || '-'}</td>
+            <td class="text-slate-400 text-[11px]">${doc.date || '-'}</td>
+            <td class="text-slate-400 text-[11px]">${doc.csc_received || '-'}</td>
+            <td class="text-slate-800 dark:text-slate-200 font-bold text-[11px] bg-slate-50 dark:bg-slate-700/50">${doc.sve_received || '-'}</td>
+            <td class="text-blue-600 font-bold text-[11px] bg-blue-50/30 dark:bg-blue-900/10">${doc.sve_sent || '-'}</td>
+            <td>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-black ${isLate ? 'text-rose-500' : 'text-slate-800 dark:text-white'}">${tat}</span>
+                <span class="text-[8px] font-black text-slate-400 uppercase">Days</span>
+              </div>
+            </td>
+            <td>${displayStatus}</td>
+            <td class="text-[11px] text-slate-400 italic">${doc.note || '-'}</td>
+            <td class="admin-only ${isLogged ? '' : 'hidden'} text-right">
+              <button onclick="openDocModal(${realIdx})" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-all">
+                <i class="ph-bold ph-note-pencil text-xl"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getBadge(s) {
+      if (s === 'อนุมัติแล้ว') return `<span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-full text-[10px] font-black uppercase">Approved</span>`;
+      if (s === 'ยกเลิก') return `<span class="px-3 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-full text-[10px] font-black uppercase">Cancelled</span>`;
+      return `<span class="px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider">Reviewing</span>`;
+    }
+
+    function applyFilter() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const u = document.getElementById('userFilter').value;
+      const filtered = masterData.filter(d => {
+        const matchQ = (d.id||'').toLowerCase().includes(q) || (d.title||'').toLowerCase().includes(q);
+        const matchS = currentFilter === 'ALL' || d.status === currentFilter;
+        const matchU = u === "" || (d.custodian || d.responsible) === u;
+        return matchQ && matchS && matchU;
+      });
+      renderTable(filtered);
+    }
+
+    function setFilter(status) {
+      currentFilter = status;
+      document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+      const map = {'ALL':'card-ALL', 'กำลังตรวจสอบ':'card-process', 'อนุมัติแล้ว':'card-success', 'ยกเลิก':'card-cancel'};
+      if(map[status]) document.getElementById(map[status]).classList.add('active');
+      applyFilter();
+    }
+
+    function updateDashboard() {
+      document.getElementById('stat-all').innerText = masterData.length;
+      document.getElementById('stat-process').innerText = masterData.filter(d => d.status === 'กำลังตรวจสอบ').length;
+      document.getElementById('stat-success').innerText = masterData.filter(d => d.status === 'อนุมัติแล้ว').length;
+      document.getElementById('stat-cancel').innerText = masterData.filter(d => d.status === 'ยกเลิก').length;
+    }
+
+    function clearSearch() { document.getElementById('search').value = ""; applyFilter(); }
+
+    function toggleLogin() {
+      if (!isLogged) {
+        const p = prompt("Enter Administrator Access Key:");
+        if (p === SECRET) { isLogged = true; sessionStorage.setItem('iso_auth', 'true'); updateAuthUI(); } 
+        else if (p !== null) alert("ACCESS DENIED");
+      } else {
+        if (confirm("Sign out?")) { isLogged = false; sessionStorage.removeItem('iso_auth'); location.reload(); }
+      }
+    }
+
+    function updateAuthUI() {
+      document.getElementById('authInfo').innerText = "ISO ADMIN";
+      document.getElementById('authInfo').className = "text-[9px] font-black text-blue-500 uppercase bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800";
+      document.getElementById('addBtn').classList.remove('hidden');
+      document.getElementById('authBtn').innerHTML = '<i class="ph-bold ph-sign-out"></i> Logout';
+      renderTable();
+    }
+
+    function handleLogo(input) {
+      if (input.files && input.files[0]) {
+        const r = new FileReader();
+        r.onload = e => {
+          document.getElementById('logoImg').src = e.target.result;
+          document.getElementById('logoImg').classList.remove('hidden');
+          document.getElementById('logoIcon').classList.add('hidden');
+          localStorage.setItem('sve_iso_logo', e.target.result);
+        };
+        r.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function openDocModal(idx = null) {
+      document.getElementById('docModal').classList.remove('hidden');
+      document.getElementById('isoForm').reset();
+      if (idx !== null) {
+        const d = masterData[idx];
+        document.getElementById('editIdx').value = idx;
+        document.getElementById('modalTitle').innerText = "Modify Document Control";
+        document.getElementById('f_id').value = d.id;
+        document.getElementById('f_owner').value = d.custodian || d.responsible;
+        document.getElementById('f_title').value = d.title;
+        document.getElementById('f_date').value = d.date;
+        document.getElementById('f_csc_rec').value = d.csc_received;
+        document.getElementById('f_sve_rec').value = d.sve_received;
+        document.getElementById('f_sve_sent').value = (d.sve_sent === '-' || !d.sve_sent) ? '' : d.sve_sent;
+        document.getElementById('f_status').value = d.status;
+        document.getElementById('f_note').value = d.note || '';
+      } else {
+        document.getElementById('editIdx').value = "";
+        document.getElementById('modalTitle').innerText = "Register New Document";
+      }
+    }
+
+    function closeDocModal() { document.getElementById('docModal').classList.add('hidden'); }
+
+    async function handleIsoSubmit(e) {
+      e.preventDefault();
+      const idx = document.getElementById('editIdx').value;
+      const btn = document.getElementById('submitBtn');
+      const payload = {
+        action: idx === "" ? 'add' : 'edit',
+        rowIndex: idx === "" ? null : parseInt(idx) + 2,
+        id: document.getElementById('f_id').value,
+        title: document.getElementById('f_title').value,
+        custodian: document.getElementById('f_owner').value,
+        date: document.getElementById('f_date').value,
+        csc_received: document.getElementById('f_csc_rec').value,
+        sve_received: document.getElementById('f_sve_received').value,
+        sve_sent: document.getElementById('f_sve_sent').value || '-',
+        status: document.getElementById('f_status').value,
+        note: document.getElementById('f_note').value
+      };
+      btn.disabled = true; btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin mr-2"></i> Committing...';
+      try {
+        const res = await fetch(G_SCRIPT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+        const result = await res.json();
+        if (result.status === 'success') { closeDocModal(); await syncData(); }
+      } catch (err) { alert("ERROR"); }
+      finally { btn.disabled = false; btn.innerText = "Commit Data to Cloud Database"; }
+    }
+
+    function populateUsers() {
+      const sel = document.getElementById('userFilter');
+      const users = [...new Set(masterData.map(d => d.custodian || d.responsible).filter(u => u))].sort();
+      sel.innerHTML = '<option value="">ทั้งหมด</option>' + users.map(u => `<option value="${u}">${u.toUpperCase()}</option>`).join('');
+    }
+
+    function exportResult(type) {
+      const area = document.getElementById('printableArea');
+      if (type === 'image') {
+        html2canvas(area, { scale: 2, backgroundColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff' }).then(canvas => {
+          const l = document.createElement('a');
+          l.download = `SVE-ISO-${new Date().getTime()}.png`;
+          l.href = canvas.toDataURL(); l.click();
+        });
+      } else {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        doc.autoTable({ html: '#docTable', styles: { font: 'Sarabun', fontSize: 7 } });
+        doc.save(`SVE-Report-ISO-${new Date().getTime()}.pdf`);
+      }
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').className = 'ph-bold ph-sun text-xl';
+      }
+      const logo = localStorage.getItem('sve_iso_logo');
+      if (logo) {
+        document.getElementById('logoImg').src = logo;
+        document.getElementById('logoImg').classList.remove('hidden');
+        document.getElementById('logoIcon').classList.add('hidden');
+      }
+      if (sessionStorage.getItem('iso_auth') === 'true') { isLogged = true; updateAuthUI(); }
+      syncData();
+    };
+  </script>
+</body>
+</html>
