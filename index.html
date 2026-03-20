@@ -485,8 +485,9 @@
             <!-- Row 1: Column headers (sort) -->
             <tr id="headerRow">
               <th style="width:44px;text-align:center;resize:none;" class="no-sort">#</th>
-              <th onclick="sortTable('docName')"><span>ชื่อเอกสาร</span><span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('cscReceivedNumber')"><span>เลขรับ CSC</span><span class="sort-arrow">↕</span></th>
               <th onclick="sortTable('docNumber')"><span>เลขที่เอกสาร</span><span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('docName')"><span>ชื่อเอกสาร</span><span class="sort-arrow">↕</span></th>
               <th onclick="sortTable('docDate')"><span>วันที่เอกสาร</span><span class="sort-arrow">↕</span></th>
               <th onclick="sortTable('cscDate')"><span>วันที่ CSC รับ</span><span class="sort-arrow">↕</span></th>
               <th onclick="sortTable('sveDate')"><span>วันที่ SVE รับ</span><span class="sort-arrow">↕</span></th>
@@ -527,6 +528,10 @@
         <div class="form-group">
           <label>เลขที่เอกสาร <span class="req">*</span></label>
           <input type="text" class="form-input" id="f_docNumber" placeholder="เช่น DOC-2024-001" />
+        </div>
+        <div class="form-group">
+          <label>เลขรับ CSC</label>
+          <input type="text" class="form-input" id="f_cscReceivedNumber" placeholder="เลขรับจาก CSC..." />
         </div>
         <div class="form-group">
           <label>วันที่เอกสาร</label>
@@ -731,6 +736,7 @@ function gsToDoc(rec) {
     id: String(rec.id||''),
     docName: rec.docName||'',
     docNumber: rec.docNumber||'',
+    cscReceivedNumber: rec.cscReceivedNumber||'',
     docDate: normalizeDate(rec.docDate),
     cscDate: normalizeDate(rec.cscDate),
     sveDate: normalizeDate(rec.sveDate),
@@ -886,8 +892,9 @@ function renderTable() {
 
       return `<tr class="${isUrgent?'urgent-row':''}">
         <td class="row-num">${startIdx+idx+1}</td>
-        <td><div class="doc-name">${escHtml(d.docName)}</div></td>
+        <td><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
         <td><span class="doc-number">${escHtml(d.docNumber)}</span></td>
+        <td><div class="doc-name">${escHtml(d.docName)}</div></td>
         <td><span class="date-cell ${!d.docDate?'empty':''}">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
         <td><span class="date-cell ${!d.cscDate?'empty':''}">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
         <td><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:'JetBrains Mono',monospace;">${d.sveTime}</span>`:''}</span></td>
@@ -1047,7 +1054,7 @@ function logout() {
 function openAddModal() {
   editingId=null;
   document.getElementById('modalTitle').textContent='เพิ่มเอกสารใหม่';
-  ['f_docName','f_docNumber','f_notes','f_action'].forEach(id=>document.getElementById(id).value='');
+  ['f_docName','f_docNumber','f_cscReceivedNumber','f_notes','f_action'].forEach(id=>document.getElementById(id).value='');
   ['f_docDate','f_cscDate','f_sveDate','f_sendDate','f_sveDateOrig'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_status').value='Under Review';
   document.getElementById('saveDocBtn').disabled=false;
@@ -1061,8 +1068,8 @@ function openEditModal(id) {
   document.getElementById('modalTitle').textContent='แก้ไขเอกสาร';
   document.getElementById('f_docName').value=d.docName;
   document.getElementById('f_docNumber').value=d.docNumber;
+  document.getElementById('f_cscReceivedNumber').value=d.cscReceivedNumber||'';
   document.getElementById('f_docDate').value=d.docDate||'';
-  document.getElementById('f_cscDate').value=d.cscDate||'';
   document.getElementById('f_sveDate').value=d.sveDate||'';
   document.getElementById('f_sveDateOrig').value=d.sveDate||'';
   document.getElementById('f_sendDate').value=d.sendDate||'';
@@ -1092,6 +1099,7 @@ function buildPayload() {
 
   return {
     docName, docNumber,
+    cscReceivedNumber: document.getElementById('f_cscReceivedNumber').value.trim(),
     docDate: document.getElementById('f_docDate').value||'',
     cscDate: document.getElementById('f_cscDate').value||'',
     sveDate,
@@ -1184,10 +1192,10 @@ function getLogoDataUrl() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function exportCSV() {
   const filtered=getFiltered();
-  const headers=['ชื่อเอกสาร','เลขที่เอกสาร','วันที่เอกสาร','วันที่ CSC รับ','วันที่ SVE รับ','วันที่ SVE ส่งออก','จำนวนวัน','สถานะ','ผู้รับผิดชอบ','หมายเหตุ'];
+  const headers=['เลขรับ CSC','เลขที่เอกสาร','ชื่อเอกสาร','วันที่เอกสาร','วันที่ CSC รับ','วันที่ SVE รับ','วันที่ SVE ส่งออก','จำนวนวัน','สถานะ','ผู้รับผิดชอบ','หมายเหตุ'];
   const rows=filtered.map(d=>{
     const p=calcPending(d.sveDate,d.sendDate);
-    return [`"${d.docName}"`,d.docNumber,fmtDate(d.docDate),fmtDate(d.cscDate),fmtDate(d.sveDate),fmtDate(d.sendDate),p!==null?p+' วัน':'',d.status,d.action||'',`"${d.notes||''}"`].join(',');
+    return [`"${d.cscReceivedNumber||''}"`,d.docNumber,`"${d.docName}"`,fmtDate(d.docDate),fmtDate(d.cscDate),fmtDate(d.sveDate),fmtDate(d.sendDate),p!==null?p+' วัน':'',d.status,d.action||'',`"${d.notes||''}"`].join(',');
   });
   downloadBlob('\uFEFF'+[headers.join(','),...rows].join('\n'),'sve_doctrack_'+today()+'.csv','text/csv;charset=utf-8');
   showToast('Export CSV สำเร็จ','success');
@@ -1215,8 +1223,9 @@ async function exportPDF() {
     const statusTextColors={'Under Review':'#4a9eff','Approved':'#00c7b7','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff6b6b'};
     return `<tr style="background:${i%2===0?'#fff':'#f5f7fa'};">
       <td style="text-align:center;color:#888;font-size:11px;">${i+1}</td>
-      <td>${d.docName||'—'}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-size:11px;color:#1a5c8a;">${d.cscReceivedNumber||'—'}</td>
       <td style="white-space:nowrap;font-family:monospace;font-size:11px;color:#1a5c8a;">${d.docNumber||'—'}</td>
+      <td>${d.docName||'—'}</td>
       <td style="white-space:nowrap;text-align:center;">${fmtDate(d.docDate)||'—'}</td>
       <td style="white-space:nowrap;text-align:center;">${fmtDate(d.cscDate)||'—'}</td>
       <td style="white-space:nowrap;text-align:center;">${fmtDate(d.sveDate)||'—'}</td>
@@ -1247,7 +1256,7 @@ tbody td{padding:5px 6px;border:1px solid #e0e0e0;vertical-align:middle;line-hei
   </div>
 </div>
 <table><thead><tr>
-<th style="width:28px;text-align:center;">#</th><th style="width:28%;">ชื่อเอกสาร</th><th style="width:13%;">เลขที่เอกสาร</th>
+<th style="width:28px;text-align:center;">#</th><th style="width:10%;">เลขรับ CSC</th><th style="width:11%;">เลขที่เอกสาร</th><th style="width:22%;">ชื่อเอกสาร</th>
 <th style="width:6%;text-align:center;">วันที่เอกสาร</th><th style="width:6%;text-align:center;">CSC รับ</th>
 <th style="width:6%;text-align:center;">SVE รับ</th><th style="width:7%;text-align:center;">SVE ส่งออก</th>
 <th style="width:5%;text-align:center;">วัน</th><th style="width:11%;">สถานะ</th><th style="width:7%;">ผู้รับผิดชอบ</th><th>หมายเหตุ</th>
@@ -1277,7 +1286,7 @@ async function exportImage() {
 
   const tbl=document.createElement('table');
   tbl.style.cssText='width:100%;border-collapse:collapse;font-size:12.5px;';
-  const cols=['ชื่อเอกสาร','เลขที่เอกสาร','วันที่เอกสาร','CSC รับ','SVE รับ','SVE ส่งออก','จำนวนวัน','สถานะ','ผู้รับผิดชอบ','หมายเหตุ'];
+  const cols=['เลขรับ CSC','เลขที่เอกสาร','ชื่อเอกสาร','วันที่เอกสาร','CSC รับ','SVE รับ','SVE ส่งออก','จำนวนวัน','สถานะ','ผู้รับผิดชอบ','หมายเหตุ'];
   const thead=document.createElement('thead');
   thead.innerHTML=`<tr>${cols.map(c=>`<th style="background:#141926;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#5a6a84;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #243050;">${c}</th>`).join('')}</tr>`;
   tbl.appendChild(thead);
@@ -1286,7 +1295,7 @@ async function exportImage() {
   filtered.forEach((d,i)=>{
     const p=calcPending(d.sveDate,d.sendDate);
     const isUrgent=d.sveDate&&!d.sendDate&&p!==null&&p>=14;
-    const cells=[d.docName,d.docNumber,fmtDate(d.docDate),fmtDate(d.cscDate),fmtDate(d.sveDate),fmtDate(d.sendDate),
+    const cells=[d.cscReceivedNumber||'—',d.docNumber,d.docName,fmtDate(d.docDate),fmtDate(d.cscDate),fmtDate(d.sveDate),fmtDate(d.sendDate),
       p!==null?`<span style="color:${isUrgent?'#ff5c5c':'#e8edf5'};font-weight:${isUrgent?700:400}">${p} วัน${isUrgent?' ⚠':''}</span>`:'—',
       `<span style="color:${sc[d.status]||'#5a6a84'};font-weight:600;">${d.status}</span>`,d.action||'—',d.notes||'—'];
     tbody.innerHTML+=`<tr style="background:${i%2===0?'#18202e':'#1e2840'};">${cells.map(c=>`<td style="padding:9px 12px;border-bottom:1px solid #141926;color:#a8b4c8;">${c}</td>`).join('')}</tr>`;
