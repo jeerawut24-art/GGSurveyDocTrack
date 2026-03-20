@@ -275,6 +275,7 @@
     .badge-comments { background:var(--amber-bg); color:var(--amber); border-color:rgba(245,166,35,0.2); }
     .badge-revise { background:var(--purple-bg); color:var(--purple); border-color:rgba(183,148,244,0.2); }
     .badge-rejected { background:var(--red-bg); color:var(--red); border-color:rgba(255,92,92,0.2); }
+    .badge-cancelled { background:rgba(90,106,132,0.15); color:var(--ink-3); border-color:rgba(90,106,132,0.25); }
 
     /* ─── STATUS LEGEND ─── */
     .status-legend {
@@ -430,6 +431,7 @@
         <option value="Approve by Comments">Approve by Comments — อนุมัติมีเงื่อนไข</option>
         <option value="Revise &amp; Resubmit">Revise &amp; Resubmit — แก้ไขและส่งใหม่</option>
         <option value="Rejected">Rejected — ไม่อนุมัติ</option>
+        <option value="Cancelled">Cancelled — ยกเลิก</option>
       </select>
       <select class="filter-select" id="actionFilter" onchange="renderTable()" style="max-width:160px;">
         <option value="">ผู้รับผิดชอบทั้งหมด</option>
@@ -562,6 +564,7 @@
             <option value="Approve by Comments">Approve by Comments</option>
             <option value="Revise &amp; Resubmit">Revise &amp; Resubmit</option>
             <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
         <div class="form-group full">
@@ -806,11 +809,11 @@ function fmtDate(d) {
 }
 
 function badgeClass(status) {
-  const m = {'Under Review':'badge-review','Approved':'badge-approved','Approve by Comments':'badge-comments','Revise & Resubmit':'badge-revise','Rejected':'badge-rejected'};
+  const m = {'Under Review':'badge-review','Approved':'badge-approved','Approve by Comments':'badge-comments','Revise & Resubmit':'badge-revise','Rejected':'badge-rejected','Cancelled':'badge-cancelled'};
   return m[status]||'badge-review';
 }
 function badgeTh(status) {
-  const m = {'Under Review':'กำลังพิจารณา','Approved':'อนุมัติแล้ว','Approve by Comments':'อนุมัติมีเงื่อนไข','Revise & Resubmit':'แก้ไขและส่งใหม่','Rejected':'ไม่อนุมัติ'};
+  const m = {'Under Review':'กำลังพิจารณา','Approved':'อนุมัติแล้ว','Approve by Comments':'อนุมัติมีเงื่อนไข','Revise & Resubmit':'แก้ไขและส่งใหม่','Rejected':'ไม่อนุมัติ','Cancelled':'ยกเลิก'};
   return m[status]||'';
 }
 
@@ -960,6 +963,7 @@ function renderStats() {
     'Approve by Comments': docs.filter(d=>d.status==='Approve by Comments').length,
     'Revise & Resubmit': docs.filter(d=>d.status==='Revise & Resubmit').length,
     'Rejected': docs.filter(d=>d.status==='Rejected').length,
+    'Cancelled': docs.filter(d=>d.status==='Cancelled').length,
   };
   const sf = document.getElementById('statusFilter').value;
 
@@ -992,6 +996,11 @@ function renderStats() {
       key:'Rejected', color:'red', label:'Rejected', nameTh:'ไม่อนุมัติ', value:counts['Rejected'], cls:'c-red',
       desc:'ถูกปฏิเสธ ต้องหารือกับผู้รับผิดชอบก่อนดำเนินการต่อ',
       tag:'✕ ต้องหารือ', tagCls:'tag-rej'
+    },
+    {
+      key:'Cancelled', color:'', label:'Cancelled', nameTh:'ยกเลิก', value:counts['Cancelled'], cls:'',
+      desc:'เอกสารถูกยกเลิก ไม่ต้องดำเนินการใดๆ',
+      tag:'✕ ยกเลิก', tagCls:'tag-rej'
     },
   ];
 
@@ -1219,8 +1228,8 @@ async function exportPDF() {
     const p=calcPending(d.sveDate,d.sendDate);
     const isUrgent=d.sveDate&&!d.sendDate&&p!==null&&p>=14;
     const daysStyle=isUrgent?'color:#b83223;font-weight:700;':(p!==null&&p>=7?'color:#c47d10;font-weight:600;':'');
-    const statusColors={'Under Review':'#1a3a5c','Approved':'#0a3530','Approve by Comments':'#3d2e08','Revise & Resubmit':'#2d1f50','Rejected':'#4a1515'};
-    const statusTextColors={'Under Review':'#4a9eff','Approved':'#00c7b7','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff6b6b'};
+    const statusColors={'Under Review':'#1a3a5c','Approved':'#0a3530','Approve by Comments':'#3d2e08','Revise & Resubmit':'#2d1f50','Rejected':'#4a1515','Cancelled':'#2a2a2a'};
+    const statusTextColors={'Under Review':'#4a9eff','Approved':'#00c7b7','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff6b6b','Cancelled':'#888888'};
     return `<tr style="background:${i%2===0?'#fff':'#f5f7fa'};">
       <td style="text-align:center;color:#888;font-size:11px;">${i+1}</td>
       <td style="white-space:nowrap;font-family:monospace;font-size:11px;color:#1a5c8a;">${d.cscReceivedNumber||'—'}</td>
@@ -1291,7 +1300,7 @@ async function exportImage() {
   thead.innerHTML=`<tr>${cols.map(c=>`<th style="background:#141926;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#5a6a84;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #243050;">${c}</th>`).join('')}</tr>`;
   tbl.appendChild(thead);
   const tbody=document.createElement('tbody');
-  const sc={'Under Review':'#5b9cf6','Approved':'#34d399','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff5c5c'};
+  const sc={'Under Review':'#5b9cf6','Approved':'#34d399','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff5c5c','Cancelled':'#888888'};
   filtered.forEach((d,i)=>{
     const p=calcPending(d.sveDate,d.sendDate);
     const isUrgent=d.sveDate&&!d.sendDate&&p!==null&&p>=14;
