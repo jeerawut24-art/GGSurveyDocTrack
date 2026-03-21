@@ -291,7 +291,7 @@ tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
 td{padding:8px 12px;vertical-align:middle;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
 .doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);}
-.doc-name{color:var(--ink);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.doc-name{color:var(--ink);max-width:320px;word-break:break-word;white-space:normal;line-height:1.4;}
 .date-cell{font-size:12px;color:var(--ink2);}
 .date-cell.empty{color:var(--ink4);}
 .action-person{font-size:12px;color:var(--ink2);}
@@ -1138,7 +1138,7 @@ function renderTable() {
         <td><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
         <td><span class="date-cell ${!d.sendDate?'empty':''}">${d.sendDate?fmtDate(d.sendDate):'—'}</span></td>
         <td>${pendingHtml}</td>
-        <td><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span><span class="badge-th">${badgeTh(d.status)}</span></span></td>
+        <td><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span></span></td>
         <td><span class="action-person">${escHtml(d.action)||'—'}</span></td>
         <td><span class="notes-cell" title="${escHtml(d.notes)}">${escHtml(d.notes)||'—'}</span></td>
         ${actions}
