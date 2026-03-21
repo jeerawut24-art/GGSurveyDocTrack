@@ -314,13 +314,13 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
   border-bottom:1px solid var(--border);
   white-space:nowrap;cursor:pointer;user-select:none;
-  position:sticky;top:0;z-index:2;overflow:visible;
+  position:sticky;top:0;z-index:2;overflow:hidden;
 }
 thead th:hover{background:var(--surface3);}
 .sort-arrow{font-size:10px;opacity:0.4;margin-left:4px;}
@@ -329,16 +329,16 @@ tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
-td{padding:8px 12px;vertical-align:middle;white-space:normal;word-break:break-word;}
-td.td-nowrap{white-space:nowrap;word-break:normal;}
-td.td-name{width:99%;}
+td{padding:8px 12px;vertical-align:middle;overflow:hidden;}
+td.td-wrap{white-space:normal;word-break:break-word;}
+td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
-.doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);white-space:nowrap;}
-.doc-name{color:var(--ink);line-height:1.4;}
-.date-cell{font-size:12px;color:var(--ink2);white-space:nowrap;}
+.doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);}
+.doc-name{color:var(--ink);line-height:1.4;white-space:normal;word-break:break-word;}
+.date-cell{font-size:12px;color:var(--ink2);}
 .date-cell.empty{color:var(--ink4);}
-.action-person{font-size:12px;color:var(--ink2);white-space:nowrap;}
-.notes-cell{font-size:11px;color:var(--ink3);}
+.action-person{font-size:12px;color:var(--ink2);}
+.notes-cell{font-size:11px;color:var(--ink3);white-space:normal;word-break:break-word;}
 
 /* ─── PENDING DAYS ─── */
 .pending-wrap{display:flex;align-items:center;gap:5px;}
@@ -696,6 +696,20 @@ td.td-name{width:99%;}
         <div class="tbl-wrap">
           <div class="tbl-scroll" id="tblScroll">
             <table>
+              <colgroup id="colGroup">
+                <col style="width:44px"/>  <!-- # -->
+                <col style="width:90px"/>  <!-- เลขที่ CSC -->
+                <col style="width:140px"/> <!-- เลขที่เอกสาร -->
+                <col/>                     <!-- ชื่อเอกสาร (auto) -->
+                <col style="width:90px"/>  <!-- วันที่เอกสาร -->
+                <col style="width:90px"/>  <!-- CSC รับ -->
+                <col style="width:90px"/>  <!-- SVE รับ -->
+                <col style="width:90px"/>  <!-- SVE ส่ง -->
+                <col style="width:75px"/>  <!-- ค้างวัน -->
+                <col style="width:145px"/> <!-- สถานะ -->
+                <col style="width:90px"/>  <!-- ผู้รับผิดชอบ -->
+                <col style="width:160px"/> <!-- หมายเหตุ -->
+              </colgroup>
               <thead>
                 <tr id="headerRow">
                   <th style="width:44px;text-align:center;">#</th>
@@ -1146,7 +1160,7 @@ function renderTable() {
         <td class="row-num td-nowrap">${startIdx+idx+1}</td>
         <td class="td-nowrap"><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
         <td class="td-nowrap"><span class="doc-number">${escHtml(d.docNumber)}</span></td>
-        <td class="td-name"><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
+        <td class="td-wrap"><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
         <td class="td-nowrap"><span class="date-cell ${!d.docDate?'empty':''}">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
         <td class="td-nowrap"><span class="date-cell ${!d.cscDate?'empty':''}">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
         <td class="td-nowrap"><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
@@ -1154,7 +1168,7 @@ function renderTable() {
         <td class="td-nowrap">${pendingHtml}</td>
         <td class="td-nowrap"><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span></span></td>
         <td class="td-nowrap"><span class="action-person">${escHtml(d.action)||'—'}</span></td>
-        <td class="td-nowrap"><span class="notes-cell" title="${escHtml(d.notes)}">${escHtml(d.notes)||'—'}</span></td>
+        <td class="td-wrap"><span class="notes-cell">${escHtml(d.notes)||'—'}</span></td>
         ${actions}
       </tr>`;
     }).join('');
@@ -1394,33 +1408,24 @@ function showToast(msg,type='info'){const c=document.getElementById('toastContai
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  COL RESIZE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  COL RESIZE — expand right only, no minWidth lock
+//  COL RESIZE — controls <col> widths, expands right only
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const colWidths = {}; // persist widths across renders keyed by th index
 function initColResize(){
+  const cols = document.querySelectorAll('#colGroup col');
   document.querySelectorAll('#headerRow th').forEach((th, idx) => {
-    // restore saved width
-    if(colWidths[idx]) th.style.width = colWidths[idx];
-
-    // avoid duplicate handles
     if(th.querySelector('.col-resize-handle')) return;
-
     const h = document.createElement('div');
     h.className = 'col-resize-handle';
     th.appendChild(h);
-
-    let startX, startW;
     h.addEventListener('mousedown', e => {
       e.preventDefault();
       e.stopPropagation();
-      startX = e.pageX;
-      startW = th.offsetWidth;
+      const startX = e.pageX;
+      const startW = th.offsetWidth;
       h.classList.add('dragging');
-
       const onMove = ev => {
         const newW = Math.max(40, startW + (ev.pageX - startX));
-        th.style.width = newW + 'px';
-        colWidths[idx] = newW + 'px';
+        if(cols[idx]) cols[idx].style.width = newW + 'px';
       };
       const onUp = () => {
         h.classList.remove('dragging');
