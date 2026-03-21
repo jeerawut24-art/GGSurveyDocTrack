@@ -314,7 +314,7 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
@@ -328,14 +328,16 @@ tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
-td{padding:8px 12px;vertical-align:middle;}
+td{padding:8px 12px;vertical-align:middle;white-space:normal;word-break:break-word;}
+td.td-nowrap{white-space:nowrap;word-break:normal;}
+td.td-name{width:99%;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
-.doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);}
-.doc-name{color:var(--ink);max-width:320px;word-break:break-word;white-space:normal;line-height:1.4;}
-.date-cell{font-size:12px;color:var(--ink2);}
+.doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);white-space:nowrap;}
+.doc-name{color:var(--ink);line-height:1.4;}
+.date-cell{font-size:12px;color:var(--ink2);white-space:nowrap;}
 .date-cell.empty{color:var(--ink4);}
-.action-person{font-size:12px;color:var(--ink2);}
-.notes-cell{font-size:11px;color:var(--ink3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.action-person{font-size:12px;color:var(--ink2);white-space:nowrap;}
+.notes-cell{font-size:11px;color:var(--ink3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ─── PENDING DAYS ─── */
 .pending-wrap{display:flex;align-items:center;gap:5px;}
@@ -698,7 +700,7 @@ td{padding:8px 12px;vertical-align:middle;}
                   <th style="width:44px;text-align:center;">#</th>
                   <th onclick="sortTable('cscReceivedNumber')" data-tip="เลขที่ CSC รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่ CSC <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docNumber')" data-tip="เลขที่เอกสารของผู้ส่ง&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่เอกสาร <span class="sort-arrow">↕</span></th>
-                  <th onclick="sortTable('docName')" style="min-width:180px;" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortTable('docName')" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docDate')" data-tip="วันที่ระบุในตัวเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่เอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('cscDate')" data-tip="วันที่ CSC ได้รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ CSC รับ <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('sveDate')" data-tip="วันที่ SVE ได้รับเอกสาร&#10;(เริ่มนับวันค้าง)&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ SVE รับ <span class="sort-arrow">↕</span></th>
@@ -1140,18 +1142,18 @@ function renderTable() {
       const statusTips={'Under Review':'กำลังพิจารณา','Approved':'อนุมัติแล้ว\nสามารถนำไปใช้งานได้','Approve by Comments':'อนุมัติตามบันทึก\nนำไปใช้งานได้แต่ต้องแก้ไขตามบันทึก','Revise & Resubmit':'ต้องแก้ไขและส่งกลับมาใหม่\nไม่สามารถนำไปใช้งานได้','Rejected':'ไม่อนุมัติ ไม่ให้ใช้งาน','Cancelled':'ยกเลิกแล้ว'};
       const actions = isAdmin ? `<td><div class="action-cell"><button class="icon-btn edit" onclick="openEditModal('${d.id}')" data-tip="แก้ไขข้อมูลเอกสารนี้" data-tip-pos="left"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn del" onclick="openDeleteConfirm('${d.id}')" data-tip="ลบเอกสารนี้ออกจาก&#10;Google Sheets" data-tip-pos="left"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div></td>` : '';
       return `<tr class="${isUrgent?'urgent-row':''}">
-        <td class="row-num">${startIdx+idx+1}</td>
-        <td><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
-        <td><span class="doc-number">${escHtml(d.docNumber)}</span></td>
-        <td><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
-        <td><span class="date-cell ${!d.docDate?'empty':''}">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
-        <td><span class="date-cell ${!d.cscDate?'empty':''}">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
-        <td><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
-        <td><span class="date-cell ${!d.sendDate?'empty':''}">${d.sendDate?fmtDate(d.sendDate):'—'}</span></td>
-        <td>${pendingHtml}</td>
-        <td><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span></span></td>
-        <td><span class="action-person">${escHtml(d.action)||'—'}</span></td>
-        <td><span class="notes-cell" title="${escHtml(d.notes)}">${escHtml(d.notes)||'—'}</span></td>
+        <td class="row-num td-nowrap">${startIdx+idx+1}</td>
+        <td class="td-nowrap"><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
+        <td class="td-nowrap"><span class="doc-number">${escHtml(d.docNumber)}</span></td>
+        <td class="td-name"><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.docDate?'empty':''}">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.cscDate?'empty':''}">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.sendDate?'empty':''}">${d.sendDate?fmtDate(d.sendDate):'—'}</span></td>
+        <td class="td-nowrap">${pendingHtml}</td>
+        <td class="td-nowrap"><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span></span></td>
+        <td class="td-nowrap"><span class="action-person">${escHtml(d.action)||'—'}</span></td>
+        <td class="td-nowrap"><span class="notes-cell" title="${escHtml(d.notes)}">${escHtml(d.notes)||'—'}</span></td>
         ${actions}
       </tr>`;
     }).join('');
