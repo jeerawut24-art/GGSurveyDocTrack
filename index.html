@@ -1225,7 +1225,7 @@ function renderStats() {
       <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${c.barW}%;background:${c.barColor};"></div></div>
     </div>`).join('');
 }
-function pct(v,t){ return t>0?Math.round(v/t*100)+'%':'0%'; }
+function pct(v,t){ if(!t) return '0%'; const p=v/t*100; return p>0&&p<1?p.toFixed(1)+'%':Math.round(p)+'%'; }
 function pct2n(v,t){ return t>0?Math.round(v/t*100):0; }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
