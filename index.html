@@ -319,7 +319,8 @@ thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
   border-bottom:1px solid var(--border);
-  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:2;
+  white-space:nowrap;cursor:pointer;user-select:none;
+  position:sticky;top:0;z-index:2;overflow:visible;
 }
 thead th:hover{background:var(--surface3);}
 .sort-arrow{font-size:10px;opacity:0.4;margin-left:4px;}
@@ -337,7 +338,7 @@ td.td-name{width:99%;}
 .date-cell{font-size:12px;color:var(--ink2);white-space:nowrap;}
 .date-cell.empty{color:var(--ink4);}
 .action-person{font-size:12px;color:var(--ink2);white-space:nowrap;}
-.notes-cell{font-size:11px;color:var(--ink3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notes-cell{font-size:11px;color:var(--ink3);}
 
 /* ─── PENDING DAYS ─── */
 .pending-wrap{display:flex;align-items:center;gap:5px;}
@@ -381,8 +382,8 @@ td.td-name{width:99%;}
 .page-info{font-size:12px;color:var(--ink3);font-family:var(--mono);padding:0 8px;}
 
 /* ─── COL RESIZE ─── */
-.col-resize-handle{position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;z-index:1;}
-.col-resize-handle:hover,.col-resize-handle.dragging{background:var(--accent);}
+.col-resize-handle{position:absolute;right:-2px;top:0;width:5px;height:100%;cursor:col-resize;z-index:3;user-select:none;}
+.col-resize-handle:hover,.col-resize-handle.dragging{background:var(--accent);opacity:0.7;border-radius:2px;}
 
 /* ═══════════════════════════════════════════
    MODALS
@@ -1393,7 +1394,44 @@ function showToast(msg,type='info'){const c=document.getElementById('toastContai
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  COL RESIZE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function initColResize(){document.querySelectorAll('#headerRow th').forEach(th=>{if(th.querySelector('.col-resize-handle'))return;const h=document.createElement('div');h.className='col-resize-handle';th.appendChild(h);let startX,startW;h.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();startX=e.pageX;startW=th.offsetWidth;h.classList.add('dragging');const onMove=ev=>{th.style.width=Math.max(60,startW+(ev.pageX-startX))+'px';th.style.minWidth=th.style.width;};const onUp=()=>{h.classList.remove('dragging');document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);};document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});});}
+//  COL RESIZE — expand right only, no minWidth lock
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const colWidths = {}; // persist widths across renders keyed by th index
+function initColResize(){
+  document.querySelectorAll('#headerRow th').forEach((th, idx) => {
+    // restore saved width
+    if(colWidths[idx]) th.style.width = colWidths[idx];
+
+    // avoid duplicate handles
+    if(th.querySelector('.col-resize-handle')) return;
+
+    const h = document.createElement('div');
+    h.className = 'col-resize-handle';
+    th.appendChild(h);
+
+    let startX, startW;
+    h.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      startX = e.pageX;
+      startW = th.offsetWidth;
+      h.classList.add('dragging');
+
+      const onMove = ev => {
+        const newW = Math.max(40, startW + (ev.pageX - startX));
+        th.style.width = newW + 'px';
+        colWidths[idx] = newW + 'px';
+      };
+      const onUp = () => {
+        h.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  REFRESH & SEARCH
