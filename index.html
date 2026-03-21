@@ -1208,7 +1208,7 @@ function renderPagination(total, totalPages) {
   html+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
   bar.innerHTML=html;
 }
-function goPage(n){currentPage=n;renderTable();}
+function goPage(n){currentPage=n;renderTable();const s=document.getElementById('tblScroll');if(s)s.scrollTop=0;}
 function filterByStatCard(type){
   const sf=document.getElementById('statusFilter');
   if(type==='all') sf.value=''; else sf.value=sf.value===type?'':type;
