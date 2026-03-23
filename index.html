@@ -233,20 +233,66 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 .dbl-label{color:var(--ink3);}
 .dbl-pct{font-weight:600;color:var(--ink);margin-left:2px;}
 
-/* ─── iPad landscape (1024px) ─── */
-@media (max-width:1024px) and (orientation:landscape) {
+/* ─── iPad landscape (1025px+) — desktop-like, just tighter ─── */
+@media (min-width:1025px) and (orientation:landscape) {
   .kpi-grid{grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:8px;}
   .kpi-card{padding:8px 10px;}
   .kpi-value{font-size:18px;}
 }
-/* ─── iPad portrait / small landscape ─── */
-@media (max-width:812px) and (orientation:landscape) {
-  .donut-bar{display:none;}
-  .kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:6px;}
-  .kpi-card{padding:7px 9px;}
-  .kpi-value{font-size:16px;}
-  td{padding:5px 8px;}
-  thead th{padding:6px 8px;}
+
+/* ─── iPhone/iPad landscape (≤1024px) ─── */
+/* Same as mobile portrait: hide sidebar, bottom nav, KPI strip, full-width table */
+@media (max-width:1024px) and (orientation:landscape) {
+  /* Hide sidebar */
+  #sidebar{display:none!important;}
+  body{display:block;overflow:hidden;}
+  #main{width:100vw;height:100vh;display:flex;flex-direction:column;padding-bottom:48px;}
+
+  /* Topbar compact */
+  #topbar{padding:0 10px;gap:6px;height:44px;min-height:44px;}
+  #expandBtn{display:none!important;}
+  .page-title{font-size:13px;}
+  .breadcrumb{display:none;}
+  #refreshBtn span:not(svg){display:none;}
+  #refreshBtn{padding:0;width:32px;height:32px;justify-content:center;min-width:32px;}
+  .btn-admin > span:last-child{display:none;}
+  .btn-admin{padding:0;width:32px;height:32px;justify-content:center;min-width:32px;}
+  .status-dot{margin:0!important;}
+  .pill-live{font-size:10px;padding:2px 6px;}
+
+  /* Page content */
+  #pageContent{padding:6px 8px 0;flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
+  .dashboard-static{flex-shrink:0;}
+
+  /* KPI: horizontal scroll strip */
+  .donut-bar{display:none!important;}
+  .kpi-grid{
+    display:flex;flex-direction:row;flex-wrap:nowrap;
+    overflow-x:auto;overflow-y:hidden;
+    gap:5px;margin-bottom:6px;padding-bottom:2px;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .kpi-grid::-webkit-scrollbar{display:none;}
+  .kpi-card{flex:0 0 auto;width:90px;padding:7px 8px;}
+  .kpi-label{font-size:9.5px;}
+  .kpi-value{font-size:17px;line-height:1;}
+  .kpi-sub{font-size:9.5px;}
+
+  /* Toolbar: single row */
+  .toolbar{flex-wrap:nowrap;gap:6px;margin-bottom:6px;}
+  .search-wrap{flex:1;min-width:0;padding:5px 8px;}
+  .filter-select{flex:0 0 auto;font-size:12px;padding:5px 6px;}
+  .record-count{font-size:11px;white-space:nowrap;}
+
+  /* Table dense */
+  .dashboard-table-area{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+  .tbl-wrap{flex:1;min-height:0;border-radius:8px;}
+  td{padding:4px 6px;font-size:11px;}
+  thead th{padding:4px 6px;font-size:10px;}
+  .badge{font-size:10px;padding:2px 5px;}
+
+  /* Bottom nav */
+  #mobileBottomNav{display:flex!important;}
 }
 
 /* ═══════════════════════════════════════════
