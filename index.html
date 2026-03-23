@@ -233,16 +233,9 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 .dbl-label{color:var(--ink3);}
 .dbl-pct{font-weight:600;color:var(--ink);margin-left:2px;}
 
-/* ─── iPad landscape (1025px+) — desktop-like, just tighter ─── */
-@media (min-width:1025px) and (orientation:landscape) {
-  .kpi-grid{grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:8px;}
-  .kpi-card{padding:8px 10px;}
-  .kpi-value{font-size:18px;}
-}
-
-/* ─── iPhone/iPad landscape (≤1024px) ─── */
-/* Same as mobile portrait: hide sidebar, bottom nav, KPI strip, full-width table */
-@media (max-width:1024px) and (orientation:landscape) {
+/* ─── iPhone/iPad landscape (≤1400px touch devices) ─── */
+/* Covers iPhone SE→Pro Max landscape + all iPad models landscape */
+@media (max-width:1400px) and (orientation:landscape) and (hover:none) and (pointer:coarse) {
   /* Hide sidebar */
   #sidebar{display:none!important;}
   body{display:block;overflow:hidden;}
@@ -273,10 +266,11 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
     scrollbar-width:none;-ms-overflow-style:none;
   }
   .kpi-grid::-webkit-scrollbar{display:none;}
-  .kpi-card{flex:0 0 auto;width:90px;padding:7px 8px;}
-  .kpi-label{font-size:9.5px;}
-  .kpi-value{font-size:17px;line-height:1;}
-  .kpi-sub{font-size:9.5px;}
+  .kpi-card{flex:0 0 auto;width:110px;padding:6px 10px;}
+  .kpi-label{font-size:9.5px;margin-bottom:2px;}
+  .kpi-value{font-size:20px;line-height:1;}
+  .kpi-sub{font-size:9px;margin-top:1px;}
+  .kpi-bar{margin-top:4px;}
 
   /* Toolbar: single row */
   .toolbar{flex-wrap:nowrap;gap:6px;margin-bottom:6px;}
@@ -296,13 +290,14 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 
 /* ═══════════════════════════════════════════
-   MOBILE (≤600px) — iPhone / small Android
+   MOBILE portrait — iPhone + iPad (touch devices ≤1024px portrait)
    Strategy:
    · Sidebar → hidden, replaced by bottom nav
    · KPI cards → compact horizontal scroll strip
    · Table area → full width, max height
 ═══════════════════════════════════════════ */
-@media (max-width:600px) {
+@media (max-width:1024px) and (orientation:portrait) and (hover:none) and (pointer:coarse),
+       (max-width:600px) {
 
   /* ── Hide desktop sidebar completely ── */
   #sidebar{display:none!important;}
