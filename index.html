@@ -471,7 +471,7 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
@@ -486,10 +486,9 @@ tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
-td{padding:8px 12px;vertical-align:middle;overflow:hidden;}
-td.td-wrap{overflow:visible;}
-td.td-wrap{white-space:normal;word-break:break-word;overflow:visible;}
-td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+td{padding:8px 12px;vertical-align:middle;overflow:hidden;white-space:nowrap;}
+td.td-wrap{white-space:normal;word-break:break-word;overflow:visible;text-overflow:unset;}
+td.td-nowrap{white-space:nowrap;overflow:hidden;}
 /* doc-number and date-cell should always wrap, never truncate */
 td.td-wrap .doc-number,td.td-wrap .date-cell{white-space:normal;word-break:break-word;overflow:visible;text-overflow:unset;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
@@ -857,18 +856,18 @@ td.td-wrap .doc-number,td.td-wrap .date-cell{white-space:normal;word-break:break
           <div class="tbl-scroll" id="tblScroll">
             <table>
               <colgroup id="colGroup">
-                <col style="width:44px"/>           <!-- # -->
+                <col style="width:40px"/>           <!-- # -->
                 <col style="width:76px"/>           <!-- เลขที่ CSC -->
-                <col style="width:200px"/>          <!-- เลขที่เอกสาร -->
-                <col/>                               <!-- ชื่อเอกสาร (auto) -->
-                <col style="min-width:96px"/>       <!-- วันที่เอกสาร -->
-                <col style="min-width:96px"/>       <!-- CSC รับ -->
-                <col style="min-width:96px"/>       <!-- SVE รับ -->
-                <col style="min-width:96px"/>       <!-- SVE ส่ง -->
-                <col style="width:75px"/>           <!-- ค้างวัน -->
-                <col style="width:145px"/>          <!-- สถานะ -->
-                <col style="width:90px"/>           <!-- ผู้รับผิดชอบ -->
-                <col style="width:160px"/>          <!-- หมายเหตุ -->
+                <col style="width:196px"/>          <!-- เลขที่เอกสาร -->
+                <col style="width:340px"/>          <!-- ชื่อเอกสาร -->
+                <col style="width:104px"/>          <!-- วันที่เอกสาร -->
+                <col style="width:104px"/>          <!-- CSC รับ -->
+                <col style="width:104px"/>          <!-- SVE รับ -->
+                <col style="width:104px"/>          <!-- SVE ส่ง -->
+                <col style="width:72px"/>           <!-- ค้างวัน -->
+                <col style="width:148px"/>          <!-- สถานะ -->
+                <col style="width:88px"/>           <!-- ผู้รับผิดชอบ -->
+                <col style="width:152px"/>          <!-- หมายเหตุ -->
               </colgroup>
               <thead>
                 <tr id="headerRow">
@@ -1318,13 +1317,13 @@ function renderTable() {
       const actions = isAdmin ? `<td><div class="action-cell"><button class="icon-btn edit" onclick="openEditModal('${d.id}')" data-tip="แก้ไขข้อมูลเอกสารนี้" data-tip-pos="left"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn del" onclick="openDeleteConfirm('${d.id}')" data-tip="ลบเอกสารนี้ออกจาก&#10;Google Sheets" data-tip-pos="left"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div></td>` : '';
       return `<tr class="${isUrgent?'urgent-row':''}">
         <td class="row-num td-nowrap">${startIdx+idx+1}</td>
-        <td class="td-wrap"><span class="doc-number" style="white-space:normal;word-break:break-word;">${escHtml(d.cscReceivedNumber||'')}</span></td>
-        <td class="td-wrap"><span class="doc-number" style="white-space:normal;word-break:break-word;">${escHtml(d.docNumber)}</span></td>
+        <td class="td-nowrap"><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
+        <td class="td-nowrap"><span class="doc-number">${escHtml(d.docNumber)}</span></td>
         <td class="td-wrap"><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
-        <td class="td-wrap"><span class="date-cell ${!d.docDate?'empty':''}" style="white-space:normal;">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
-        <td class="td-wrap"><span class="date-cell ${!d.cscDate?'empty':''}" style="white-space:normal;">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
-        <td class="td-wrap"><span class="date-cell ${!d.sveDate?'empty':''}" style="white-space:normal;">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
-        <td class="td-wrap"><span class="date-cell ${!d.sendDate?'empty':''}" style="white-space:normal;">${d.sendDate?fmtDate(d.sendDate):'—'}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.docDate?'empty':''}">${d.docDate?fmtDate(d.docDate):'—'}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.cscDate?'empty':''}">${d.cscDate?fmtDate(d.cscDate):'—'}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.sveDate?'empty':''}">${d.sveDate?fmtDate(d.sveDate):'—'}${d.sveTime?`<br><span style="font-size:10.5px;color:var(--accent);font-family:var(--mono);">${d.sveTime}</span>`:''}</span></td>
+        <td class="td-nowrap"><span class="date-cell ${!d.sendDate?'empty':''}">${d.sendDate?fmtDate(d.sendDate):'—'}</span></td>
         <td class="td-nowrap">${pendingHtml}</td>
         <td class="td-nowrap"><span class="badge ${badgeClass(d.status)}" data-tip="${statusTips[d.status]||d.status}"><span class="badge-en">${escHtml(d.status)}</span></span></td>
         <td class="td-nowrap"><span class="action-person">${escHtml(d.action)||'—'}</span></td>
