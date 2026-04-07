@@ -314,13 +314,13 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
   border-bottom:1px solid var(--border);
   white-space:nowrap;cursor:pointer;user-select:none;
-  position:sticky;top:0;z-index:2;overflow:visible;
+  position:sticky;top:0;z-index:2;overflow:hidden;
 }
 thead th:hover{background:var(--surface3);}
 .sort-arrow{font-size:10px;opacity:0.4;margin-left:4px;}
@@ -329,9 +329,9 @@ tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
-td{padding:8px 12px;vertical-align:middle;}
-td.td-wrap{white-space:normal;word-break:break-word;overflow:hidden;}
-td.td-nowrap{white-space:nowrap;overflow:visible;}
+td{padding:8px 12px;vertical-align:middle;overflow:hidden;}
+td.td-wrap{white-space:normal;word-break:break-word;}
+td.td-nowrap{white-space:nowrap;overflow:visible!important;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
 .doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);}
 .doc-name{color:var(--ink);line-height:1.4;white-space:normal;word-break:break-word;}
@@ -437,7 +437,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible;}
 
 /* ─── DATE PICKER POPUP ─── */
 .date-picker-popup{
-  position:fixed;z-index:9999;
+  position:fixed;z-index:1100;
   background:var(--surface);border:1px solid var(--border2);
   border-radius:var(--radius-lg);padding:14px;
   box-shadow:var(--shadow-lg);min-width:240px;
@@ -750,17 +750,17 @@ td.td-nowrap{white-space:nowrap;overflow:visible;}
             <table>
               <colgroup id="colGroup">
                 <col style="width:44px"/>  <!-- # -->
-                <col style="width:110px"/> <!-- เลขที่ CSC -->
-                <col style="width:150px"/> <!-- เลขที่เอกสาร -->
-                <col style="width:220px"/> <!-- ชื่อเอกสาร -->
-                <col style="width:100px"/> <!-- วันที่เอกสาร -->
-                <col style="width:100px"/> <!-- CSC รับ -->
-                <col style="width:100px"/> <!-- SVE รับ -->
-                <col style="width:100px"/> <!-- SVE ส่ง -->
-                <col style="width:90px"/>  <!-- ค้างวัน -->
-                <col style="width:160px"/> <!-- สถานะ -->
-                <col style="width:110px"/> <!-- ผู้รับผิดชอบ -->
-                <col style="width:180px"/> <!-- หมายเหตุ -->
+                <col style="width:90px"/>  <!-- เลขที่ CSC -->
+                <col style="width:140px"/> <!-- เลขที่เอกสาร -->
+                <col/>                     <!-- ชื่อเอกสาร (auto) -->
+                <col style="width:90px"/>  <!-- วันที่เอกสาร -->
+                <col style="width:90px"/>  <!-- CSC รับ -->
+                <col style="width:90px"/>  <!-- SVE รับ -->
+                <col style="width:90px"/>  <!-- SVE ส่ง -->
+                <col style="width:75px"/>  <!-- ค้างวัน -->
+                <col style="width:145px"/> <!-- สถานะ -->
+                <col style="width:90px"/>  <!-- ผู้รับผิดชอบ -->
+                <col style="width:160px"/> <!-- หมายเหตุ -->
                 <col style="width:70px"/>  <!-- Admin actions -->
               </colgroup>
               <thead>
@@ -1112,15 +1112,24 @@ function normalizeDate(val) {
     const [d,m,y]=s.split('/');
     return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
   }
-  // yyyy-mm-dd (ISO)
+  // yyyy-mm-dd (ISO) — parse directly, no Date() to avoid timezone shift
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
     const [y,m,d]=s.substring(0,10).split('-');
     return `${d}/${m}/${y}`;
   }
-  // fallback: try Date parse
+  // Google Sheets serial number (number only)
+  if (/^\d+$/.test(s)) {
+    const serial = parseInt(s);
+    // Excel/Sheets epoch: Jan 1 1900 = 1 (with Lotus bug: treats 1900 as leap)
+    const dt = new Date(Date.UTC(1899,11,30) + serial * 86400000);
+    return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}/${dt.getUTCFullYear()}`;
+  }
+  // fallback: try Date parse with UTC to avoid timezone offset
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) {
-    return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+    // adjust for local timezone to get the "wall clock" date
+    const local = new Date(dt.getTime() + dt.getTimezoneOffset() * 60000);
+    return `${String(local.getDate()).padStart(2,'0')}/${String(local.getMonth()+1).padStart(2,'0')}/${local.getFullYear()}`;
   }
   return s;
 }
@@ -1146,15 +1155,23 @@ function setLoading(on, msg) {
 //  HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function autoFmtDate(el) {
-  // auto-insert slash: 26032026 → 26/03/2026
-  let v = el.value.replace(/[^0-9]/g,'');
+  const raw = el.value;
+  // strip all non-digits
+  let v = raw.replace(/[^0-9]/g,'');
+  // rebuild with slashes
   if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
   if (v.length > 5) v = v.substring(0,5) + '/' + v.substring(5,9);
-  el.value = v;
+  // only update if different to avoid cursor jump on deletion
+  if (el.value !== v) el.value = v;
 }
 function isValidDate(val) {
   if (!val) return true; // empty is OK
-  return /^\d{2}\/\d{2}\/\d{4}$/.test(val.trim());
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(val.trim())) return false;
+  const [d,m,y] = val.trim().split('/').map(Number);
+  if (m < 1 || m > 12) return false;
+  if (d < 1 || d > new Date(y, m, 0).getDate()) return false;
+  if (y < 1900 || y > 2100) return false;
+  return true;
 }
 function parseDate(val) {
   if (!val) return null;
@@ -1295,7 +1312,10 @@ function renderPagination(total, totalPages) {
 function goPage(n){currentPage=n;renderTable();const s=document.getElementById('tblScroll');if(s)s.scrollTop=0;}
 function filterByStatCard(type){
   const sf=document.getElementById('statusFilter');
-  if(type==='all') sf.value=''; else sf.value=sf.value===type?'':type;
+  // type can be 'all', a status string, or a dataset key passed via this.dataset.key
+  const key = (type && type !== 'all') ? type : '';
+  if(key==='') sf.value='';
+  else sf.value = sf.value===key ? '' : key;
   currentPage=1;renderTable();renderStats();
 }
 function updateActionFilter(){
@@ -1305,7 +1325,21 @@ function updateActionFilter(){
   sel.innerHTML='<option value="">ผู้รับผิดชอบทั้งหมด</option>'+names.map(n=>`<option value="${escHtml(n)}" ${n===current?'selected':''}>${escHtml(n)}</option>`).join('');
 }
 function updateSortArrows(){
-  document.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const a=th.querySelector('.sort-arrow');if(a)a.textContent='↕';});
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.remove('sorted');
+    const a=th.querySelector('.sort-arrow');
+    if(a) a.textContent='↕';
+  });
+  // highlight active sort column
+  const ths = document.querySelectorAll('#headerRow th');
+  const fieldMap = [null,'cscReceivedNumber','docNumber','docName','docDate','cscDate','sveDate','sendDate','pendingDays','status','action',null,null];
+  ths.forEach((th,i)=>{
+    if(fieldMap[i]===sortField){
+      th.classList.add('sorted');
+      const a=th.querySelector('.sort-arrow');
+      if(a) a.textContent=sortDir==='asc'?'↑':'↓';
+    }
+  });
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1334,9 +1368,9 @@ function renderStats() {
     'Rejected':           'ไม่อนุมัติ ไม่ให้ใช้งาน\nคลิกเพื่อกรอง',
     'Cancelled':          'ยกเลิกแล้ว\nคลิกเพื่อกรอง',
   };
-  const onclick_map = (key) => key==='' ? `filterByStatCard('all')` : `filterByStatCard('${key.replace(/'/g,"\\'")}')`;
+  const onclick_map = (key) => key==='' ? `filterByStatCard('all')` : `filterByStatCard(this.dataset.key)`;
   document.getElementById('statsGrid').innerHTML=cards.map(c=>`
-    <div class="kpi-card ${sf===c.key&&c.key!==''?'active-filter':sf===''&&c.key===''?'active-filter':''}" onclick="${onclick_map(c.key)}" data-tip="${kpiTips[c.key]||''}">
+    <div class="kpi-card ${sf===c.key&&c.key!==''?'active-filter':sf===''&&c.key===''?'active-filter':''}" onclick="${c.key===''?`filterByStatCard('all')`:`filterByStatCard(this.dataset.key)`}" data-key="${escHtml(c.key)}" data-tip="${kpiTips[c.key]||''}">
       <div class="kpi-label">${c.label}</div>
       <div class="kpi-value ${c.cls}">${c.value}</div>
       <div class="kpi-sub">${c.pct}</div>
@@ -1356,7 +1390,7 @@ function renderDonut(){}
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  URGENT PANEL & PAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function getUrgentDocs(){ return docs.filter(d=>d.sveDate&&!d.sendDate&&calcPending(d.sveDate,d.sendDate)>=14&&d.status==='Under Review').sort((a,b)=>calcPending(b.sveDate,b.sendDate)-calcPending(a.sveDate,a.sendDate));}
+function getUrgentDocs(){ return docs.filter(d=>d.sveDate&&!d.sendDate&&calcPending(d.sveDate,d.sendDate)>=14).sort((a,b)=>calcPending(b.sveDate,b.sendDate)-calcPending(a.sveDate,a.sendDate));}
 function renderUrgentBadge(){
   const n=getUrgentDocs().length;
   document.getElementById('urgentBadge').textContent=n;
@@ -1511,16 +1545,42 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function openManual(){openModal('manualModal');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const dp=document.getElementById('datePicker');if(dp&&dp.classList.contains('open'))return;document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));}});
 function toggleDropdown(id){const el=document.getElementById(id);const isOpen=el.classList.contains('open');closeDropdowns();if(!isOpen)el.classList.add('open');}
 function closeDropdowns(){document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('open'));}
 document.addEventListener('click',e=>{if(!e.target.closest('.dropdown-wrap'))closeDropdowns();});
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},3500);}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  COL RESIZE (disabled — columns are fixed)
+//  COL RESIZE — controls <col> widths, expands right only
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function initColResize(){ /* columns fixed, no resize */ }
+function initColResize(){
+  const cols = document.querySelectorAll('#colGroup col');
+  document.querySelectorAll('#headerRow th').forEach((th, idx) => {
+    if(th.querySelector('.col-resize-handle')) return;
+    const h = document.createElement('div');
+    h.className = 'col-resize-handle';
+    th.appendChild(h);
+    h.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.pageX;
+      const startW = th.offsetWidth;
+      h.classList.add('dragging');
+      const onMove = ev => {
+        const newW = Math.max(40, startW + (ev.pageX - startX));
+        if(cols[idx]) cols[idx].style.width = newW + 'px';
+      };
+      const onUp = () => {
+        h.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  REFRESH & SEARCH
@@ -1638,18 +1698,24 @@ initColResize();
     dpMonth = match ? parseInt(match[2])-1 : today.getMonth();
     dpRenderAll();
     const popup = document.getElementById('datePicker');
-    popup.style.display='block';
+    // show offscreen first so we can measure
+    popup.style.visibility = 'hidden';
+    popup.style.display = 'block';
     const rect = triggerBtn.getBoundingClientRect();
-    const pw = popup.offsetWidth || 240;
-    const ph = popup.offsetHeight || 300;
-    let left = rect.left;
-    let top = rect.bottom + 4;
-    if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
-    if(top + ph > window.innerHeight - 8) top = rect.top - ph - 4;
-    if(left < 8) left = 8;
-    popup.style.left = left+'px';
-    popup.style.top = top+'px';
-    popup.classList.add('open');
+    requestAnimationFrame(function(){
+      const pw = popup.offsetWidth || 248;
+      const ph = popup.offsetHeight || 300;
+      let left = rect.left;
+      let top = rect.bottom + 4;
+      if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+      if(top + ph > window.innerHeight - 8) top = rect.top - ph - 4;
+      if(left < 8) left = 8;
+      if(top < 8) top = 8;
+      popup.style.left = left+'px';
+      popup.style.top = top+'px';
+      popup.style.visibility = '';
+      popup.classList.add('open');
+    });
   };
 
   window.dpChangeMonth = function(delta){
