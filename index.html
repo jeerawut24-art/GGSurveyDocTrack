@@ -314,7 +314,7 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
@@ -752,7 +752,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                 <col style="width:44px"/>  <!-- # -->
                 <col style="width:90px"/>  <!-- เลขที่ CSC -->
                 <col style="width:140px"/> <!-- เลขที่เอกสาร -->
-                <col/>                     <!-- ชื่อเอกสาร (auto) -->
+                <col style="width:220px"/> <!-- ชื่อเอกสาร -->
                 <col style="width:90px"/>  <!-- วันที่เอกสาร -->
                 <col style="width:90px"/>  <!-- CSC รับ -->
                 <col style="width:90px"/>  <!-- SVE รับ -->
@@ -760,7 +760,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                 <col style="width:75px"/>  <!-- ค้างวัน -->
                 <col style="width:145px"/> <!-- สถานะ -->
                 <col style="width:90px"/>  <!-- ผู้รับผิดชอบ -->
-                <col style="width:160px"/> <!-- หมายเหตุ -->
+                <col/>                     <!-- หมายเหตุ (auto-fill) -->
                 <col style="width:70px"/>  <!-- Admin actions -->
               </colgroup>
               <thead>
@@ -1257,7 +1257,11 @@ function renderTable() {
   const startIdx = (currentPage-1)*PAGE_SIZE;
   const page = filtered.slice(startIdx, startIdx+PAGE_SIZE);
   document.getElementById('recordCount').textContent = `${total} รายการ`;
-  document.getElementById('actionColHead').style.display = isAdmin ? '' : 'none';
+  const adminColDisplay = isAdmin ? '' : 'none';
+  document.getElementById('actionColHead').style.display = adminColDisplay;
+  // sync the <col> for admin actions column (last col) so no space is reserved
+  const cols = document.querySelectorAll('#colGroup col');
+  if(cols.length) cols[cols.length-1].style.display = adminColDisplay;
   const tbody = document.getElementById('tableBody');
   const empty = document.getElementById('emptyState');
   if (page.length===0) { tbody.innerHTML=''; empty.style.display='flex'; document.getElementById('tblScroll').style.display='none'; }
