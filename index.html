@@ -314,13 +314,13 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
   border-bottom:1px solid var(--border);
   white-space:nowrap;cursor:pointer;user-select:none;
-  position:sticky;top:0;z-index:2;overflow:hidden;
+  position:sticky;top:0;z-index:2;overflow:visible;
 }
 thead th:hover{background:var(--surface3);}
 .sort-arrow{font-size:10px;opacity:0.4;margin-left:4px;}
@@ -329,9 +329,9 @@ tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.urgent-row{background:rgba(255,92,92,0.06);}
-td{padding:8px 12px;vertical-align:middle;overflow:hidden;}
-td.td-wrap{white-space:normal;word-break:break-word;}
-td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+td{padding:8px 12px;vertical-align:middle;}
+td.td-wrap{white-space:normal;word-break:break-word;overflow:hidden;}
+td.td-nowrap{white-space:nowrap;overflow:visible;}
 .row-num{color:var(--ink4);font-size:11px;text-align:center;}
 .doc-number{font-family:var(--mono);font-size:11px;color:var(--blue);}
 .doc-name{color:var(--ink);line-height:1.4;white-space:normal;word-break:break-word;}
@@ -421,6 +421,58 @@ td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 }
 .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
 .form-input::placeholder{color:var(--ink4);}
+
+/* ─── DATE PICKER WRAPPER ─── */
+.date-field-wrap{position:relative;display:flex;align-items:stretch;}
+.date-field-wrap .form-input{border-radius:var(--radius) 0 0 var(--radius);border-right:none;flex:1;}
+.date-field-wrap .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);z-index:1;position:relative;}
+.date-cal-btn{
+  padding:0 10px;border:1px solid var(--border);
+  border-radius:0 var(--radius) var(--radius) 0;
+  background:var(--surface2);color:var(--ink3);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:var(--trans);flex-shrink:0;
+}
+.date-cal-btn:hover{background:var(--surface3);color:var(--accent);}
+
+/* ─── DATE PICKER POPUP ─── */
+.date-picker-popup{
+  position:fixed;z-index:9999;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius-lg);padding:14px;
+  box-shadow:var(--shadow-lg);min-width:240px;
+  display:none;
+}
+.date-picker-popup.open{display:block;}
+.dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px;}
+.dp-nav{background:none;border:1px solid var(--border);border-radius:var(--radius);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);font-size:14px;transition:var(--trans);flex-shrink:0;}
+.dp-nav:hover{background:var(--surface2);color:var(--ink);}
+.dp-month-year{display:flex;gap:5px;flex:1;justify-content:center;}
+.dp-month-sel,.dp-year-sel{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:3px 6px;
+  font-family:var(--font);font-size:12px;color:var(--ink);
+  cursor:pointer;outline:none;
+}
+.dp-month-sel:focus,.dp-year-sel:focus{border-color:var(--accent);}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.dp-day-head{text-align:center;font-size:10px;font-weight:700;color:var(--ink3);padding:3px 0;}
+.dp-day{
+  text-align:center;font-size:12px;padding:5px 2px;
+  border-radius:var(--radius);cursor:pointer;
+  transition:background 0.1s,color 0.1s;
+  color:var(--ink2);border:none;background:none;
+  font-family:var(--font);
+}
+.dp-day:hover:not(.dp-empty):not(.dp-other){background:var(--surface2);color:var(--ink);}
+.dp-day.dp-today{color:var(--accent);font-weight:700;}
+.dp-day.dp-selected{background:var(--accent);color:#fff;font-weight:700;}
+[data-theme="light"] .dp-day.dp-selected{color:#0f172a;}
+.dp-day.dp-other{color:var(--ink4);font-size:11px;}
+.dp-day.dp-empty{cursor:default;}
+.dp-today-btn{margin-top:10px;width:100%;padding:6px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:12px;color:var(--ink2);cursor:pointer;transition:var(--trans);}
+.dp-today-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+[data-theme="light"] .dp-today-btn:hover{color:#0f172a;}
 
 /* ─── LOGIN MODAL ─── */
 .login-icon{width:52px;height:52px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--accent);}
@@ -698,17 +750,18 @@ td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
             <table>
               <colgroup id="colGroup">
                 <col style="width:44px"/>  <!-- # -->
-                <col style="width:90px"/>  <!-- เลขที่ CSC -->
-                <col style="width:140px"/> <!-- เลขที่เอกสาร -->
-                <col/>                     <!-- ชื่อเอกสาร (auto) -->
-                <col style="width:90px"/>  <!-- วันที่เอกสาร -->
-                <col style="width:90px"/>  <!-- CSC รับ -->
-                <col style="width:90px"/>  <!-- SVE รับ -->
-                <col style="width:90px"/>  <!-- SVE ส่ง -->
-                <col style="width:75px"/>  <!-- ค้างวัน -->
-                <col style="width:145px"/> <!-- สถานะ -->
-                <col style="width:90px"/>  <!-- ผู้รับผิดชอบ -->
-                <col style="width:160px"/> <!-- หมายเหตุ -->
+                <col style="width:110px"/> <!-- เลขที่ CSC -->
+                <col style="width:150px"/> <!-- เลขที่เอกสาร -->
+                <col style="width:220px"/> <!-- ชื่อเอกสาร -->
+                <col style="width:100px"/> <!-- วันที่เอกสาร -->
+                <col style="width:100px"/> <!-- CSC รับ -->
+                <col style="width:100px"/> <!-- SVE รับ -->
+                <col style="width:100px"/> <!-- SVE ส่ง -->
+                <col style="width:90px"/>  <!-- ค้างวัน -->
+                <col style="width:160px"/> <!-- สถานะ -->
+                <col style="width:110px"/> <!-- ผู้รับผิดชอบ -->
+                <col style="width:180px"/> <!-- หมายเหตุ -->
+                <col style="width:70px"/>  <!-- Admin actions -->
               </colgroup>
               <thead>
                 <tr id="headerRow">
@@ -833,10 +886,10 @@ td.td-nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         <div class="form-group full"><label>ชื่อเอกสาร <span class="req">*</span></label><input class="form-input" id="f_docName" placeholder="ชื่อเอกสาร"/></div>
         <div class="form-group"><label>เลขที่เอกสาร <span class="req">*</span></label><input class="form-input" id="f_docNumber" placeholder="เลขที่เอกสาร"/></div>
         <div class="form-group"><label>เลขรับ CSC</label><input class="form-input" id="f_cscReceivedNumber" placeholder="เลขรับ CSC"/></div>
-        <div class="form-group"><label>วันที่เอกสาร</label><input class="form-input" id="f_docDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)"/></div>
-        <div class="form-group"><label>วันที่ CSC รับ</label><input class="form-input" id="f_cscDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)"/></div>
-        <div class="form-group"><label>วันที่ SVE รับ</label><input class="form-input" id="f_sveDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)"/></div>
-        <div class="form-group"><label>วันที่ SVE ส่งออก</label><input class="form-input" id="f_sendDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)"/></div>
+        <div class="form-group"><label>วันที่เอกสาร</label><div class="date-field-wrap"><input class="form-input" id="f_docDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)" autocomplete="off"/><button type="button" class="date-cal-btn" onclick="openDatePicker('f_docDate',this)" tabindex="-1" title="เลือกวันที่"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button></div></div>
+        <div class="form-group"><label>วันที่ CSC รับ</label><div class="date-field-wrap"><input class="form-input" id="f_cscDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)" autocomplete="off"/><button type="button" class="date-cal-btn" onclick="openDatePicker('f_cscDate',this)" tabindex="-1" title="เลือกวันที่"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button></div></div>
+        <div class="form-group"><label>วันที่ SVE รับ</label><div class="date-field-wrap"><input class="form-input" id="f_sveDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)" autocomplete="off"/><button type="button" class="date-cal-btn" onclick="openDatePicker('f_sveDate',this)" tabindex="-1" title="เลือกวันที่"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button></div></div>
+        <div class="form-group"><label>วันที่ SVE ส่งออก</label><div class="date-field-wrap"><input class="form-input" id="f_sendDate" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="autoFmtDate(this)" autocomplete="off"/><button type="button" class="date-cal-btn" onclick="openDatePicker('f_sendDate',this)" tabindex="-1" title="เลือกวันที่"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button></div></div>
         <div class="form-group"><label>สถานะ</label>
           <select class="form-input" id="f_status">
             <option>Under Review</option>
@@ -1465,37 +1518,9 @@ document.addEventListener('click',e=>{if(!e.target.closest('.dropdown-wrap'))clo
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},3500);}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  COL RESIZE
+//  COL RESIZE (disabled — columns are fixed)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  COL RESIZE — controls <col> widths, expands right only
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function initColResize(){
-  const cols = document.querySelectorAll('#colGroup col');
-  document.querySelectorAll('#headerRow th').forEach((th, idx) => {
-    if(th.querySelector('.col-resize-handle')) return;
-    const h = document.createElement('div');
-    h.className = 'col-resize-handle';
-    th.appendChild(h);
-    h.addEventListener('mousedown', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      const startX = e.pageX;
-      const startW = th.offsetWidth;
-      h.classList.add('dragging');
-      const onMove = ev => {
-        const newW = Math.max(40, startW + (ev.pageX - startX));
-        if(cols[idx]) cols[idx].style.width = newW + 'px';
-      };
-      const onUp = () => {
-        h.classList.remove('dragging');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  });
-}
+function initColResize(){ /* columns fixed, no resize */ }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  REFRESH & SEARCH
@@ -1564,6 +1589,163 @@ renderUrgentPanel();
 renderUrgentBadge();
 loadDocs();
 initColResize();
+</script>
+
+<!-- DATE PICKER POPUP -->
+<div id="datePicker" class="date-picker-popup">
+  <div class="dp-header">
+    <button class="dp-nav" onclick="dpChangeMonth(-1)">‹</button>
+    <div class="dp-month-year">
+      <select class="dp-month-sel" id="dpMonthSel" onchange="dpRender()"></select>
+      <select class="dp-year-sel" id="dpYearSel" onchange="dpRender()"></select>
+    </div>
+    <button class="dp-nav" onclick="dpChangeMonth(1)">›</button>
+  </div>
+  <div class="dp-grid" id="dpGrid"></div>
+  <button class="dp-today-btn" onclick="dpSelectToday()">วันนี้</button>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  CUSTOM DATE PICKER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(function(){
+  let dpTarget = null;
+  let dpYear = 0, dpMonth = 0;
+  const MONTHS_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const DAYS_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  function dpInitSelects(){
+    const ms = document.getElementById('dpMonthSel');
+    if(ms.options.length===0){
+      MONTHS_TH.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; ms.appendChild(o); });
+    }
+    const ys = document.getElementById('dpYearSel');
+    if(ys.options.length===0){
+      const now = new Date().getFullYear();
+      for(let y=now-10;y<=now+5;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; ys.appendChild(o); }
+    }
+  }
+
+  window.openDatePicker = function(inputId, triggerBtn){
+    dpInitSelects();
+    dpTarget = inputId;
+    const inp = document.getElementById(inputId);
+    const val = inp.value.trim();
+    const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const today = new Date();
+    dpYear = match ? parseInt(match[3]) : today.getFullYear();
+    dpMonth = match ? parseInt(match[2])-1 : today.getMonth();
+    dpRenderAll();
+    const popup = document.getElementById('datePicker');
+    popup.style.display='block';
+    const rect = triggerBtn.getBoundingClientRect();
+    const pw = popup.offsetWidth || 240;
+    const ph = popup.offsetHeight || 300;
+    let left = rect.left;
+    let top = rect.bottom + 4;
+    if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    if(top + ph > window.innerHeight - 8) top = rect.top - ph - 4;
+    if(left < 8) left = 8;
+    popup.style.left = left+'px';
+    popup.style.top = top+'px';
+    popup.classList.add('open');
+  };
+
+  window.dpChangeMonth = function(delta){
+    dpMonth += delta;
+    if(dpMonth>11){dpMonth=0;dpYear++;}
+    if(dpMonth<0){dpMonth=11;dpYear--;}
+    const ys = document.getElementById('dpYearSel');
+    let found=false;
+    for(let i=0;i<ys.options.length;i++) if(parseInt(ys.options[i].value)===dpYear){found=true;break;}
+    if(!found){ const o=document.createElement('option'); o.value=dpYear; o.textContent=dpYear; ys.appendChild(o); }
+    dpRenderAll();
+  };
+
+  window.dpRender = function(){
+    dpMonth = parseInt(document.getElementById('dpMonthSel').value);
+    dpYear = parseInt(document.getElementById('dpYearSel').value);
+    dpRenderGrid();
+  };
+
+  function dpRenderAll(){
+    document.getElementById('dpMonthSel').value = dpMonth;
+    document.getElementById('dpYearSel').value = dpYear;
+    dpRenderGrid();
+  }
+
+  function dpRenderGrid(){
+    const grid = document.getElementById('dpGrid');
+    let html = DAYS_TH.map(d=>`<div class="dp-day-head">${d}</div>`).join('');
+    const firstDay = new Date(dpYear, dpMonth, 1).getDay();
+    const daysInMonth = new Date(dpYear, dpMonth+1, 0).getDate();
+    const today = new Date();
+    let selDay = null;
+    if(dpTarget){
+      const v = document.getElementById(dpTarget).value.trim();
+      const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if(m && parseInt(m[2])-1===dpMonth && parseInt(m[3])===dpYear) selDay=parseInt(m[1]);
+    }
+    const prevDays = new Date(dpYear, dpMonth, 0).getDate();
+    for(let i=0;i<firstDay;i++){
+      const d = prevDays - firstDay + 1 + i;
+      html += `<button class="dp-day dp-other" onclick="dpPickOther(${dpYear},${dpMonth-1},${d})">${d}</button>`;
+    }
+    for(let d=1;d<=daysInMonth;d++){
+      const isSel = d===selDay;
+      const isToday = d===today.getDate()&&dpMonth===today.getMonth()&&dpYear===today.getFullYear();
+      let cls='dp-day';
+      if(isSel) cls+=' dp-selected';
+      else if(isToday) cls+=' dp-today';
+      html += `<button class="${cls}" onclick="dpPick(${d})">${d}</button>`;
+    }
+    const cells = firstDay + daysInMonth;
+    const rem = cells%7===0 ? 0 : 7-(cells%7);
+    for(let d=1;d<=rem;d++){
+      html += `<button class="dp-day dp-other" onclick="dpPickOther(${dpYear},${dpMonth+1},${d})">${d}</button>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  window.dpPick = function(day){
+    if(!dpTarget) return;
+    const dd = String(day).padStart(2,'0');
+    const mm = String(dpMonth+1).padStart(2,'0');
+    document.getElementById(dpTarget).value = `${dd}/${mm}/${dpYear}`;
+    closeDatePicker();
+  };
+
+  window.dpPickOther = function(y,m,d){
+    const dt = new Date(y, m, d);
+    dpYear=dt.getFullYear(); dpMonth=dt.getMonth();
+    dpRenderAll();
+    setTimeout(()=>dpPick(dt.getDate()),0);
+  };
+
+  window.dpSelectToday = function(){
+    const t = new Date();
+    dpYear=t.getFullYear(); dpMonth=t.getMonth();
+    dpPick(t.getDate());
+  };
+
+  function closeDatePicker(){
+    const popup = document.getElementById('datePicker');
+    popup.classList.remove('open');
+    popup.style.display='none';
+    dpTarget=null;
+  }
+
+  document.addEventListener('mousedown', function(e){
+    const popup = document.getElementById('datePicker');
+    if(!popup.classList.contains('open')) return;
+    if(!popup.contains(e.target) && !e.target.closest('.date-cal-btn')) closeDatePicker();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') closeDatePicker();
+  });
+})();
 </script>
 </body>
 </html>
