@@ -282,10 +282,6 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
   background:var(--accent-dim);border:1px solid var(--accent-glow);
   border-radius:var(--radius);padding:4px 9px;white-space:nowrap;
 }
-
-/* search shrinks when admin controls are visible */
-#searchWrap{transition:flex 0.2s ease,min-width 0.2s ease;}
-#mainToolbar.admin-active #searchWrap{flex:0 1 220px;min-width:140px;}
 /* addBtn hidden until admin login */
 #addBtn{display:none;}
 
@@ -718,15 +714,15 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
 
         <!-- TOOLBAR -->
         <div class="toolbar" id="mainToolbar">
+          <!-- Admin inline controls (shown only in admin mode) — left of search -->
+          <div class="admin-inline" id="adminInline">
+            <span class="admin-inline-label">⚡ Admin</span>
+            <button class="btn btn-sm btn-accent" id="addBtn" onclick="openAddModal()" data-tip="เพิ่มเอกสารใหม่">+ เพิ่มเอกสาร</button>
+          </div>
           <div class="search-wrap" id="searchWrap" data-tip="ค้นหาด้วย ชื่อเอกสาร&#10;เลขที่เอกสาร หรือ เลขที่ CSC">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input class="search-input" id="searchInput" type="text" placeholder="ค้นหาชื่อเอกสาร, เลขที่..." oninput="onSearchInput()"/>
             <button class="search-clear" id="searchClear" onclick="clearSearch()" data-tip="ล้างคำค้นหา">✕</button>
-          </div>
-          <!-- Admin inline controls (shown only in admin mode) -->
-          <div class="admin-inline" id="adminInline">
-            <span class="admin-inline-label">⚡ Admin</span>
-            <button class="btn btn-sm btn-accent" id="addBtn" onclick="openAddModal()" data-tip="เพิ่มเอกสารใหม่">+ เพิ่มเอกสาร</button>
           </div>
           <select class="filter-select" id="statusFilter" onchange="currentPage=1;renderTable();renderStats();" data-tip="กรองตามสถานะการพิจารณา">
             <option value="">สถานะทั้งหมด</option>
@@ -769,7 +765,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                   <th style="width:44px;text-align:center;">#</th>
                   <th onclick="sortTable('cscReceivedNumber')" data-tip="เลขที่ CSC รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่ CSC <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docNumber')" data-tip="เลขที่เอกสารของผู้ส่ง&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่เอกสาร <span class="sort-arrow">↕</span></th>
-                  <th onclick="sortTable('docName')" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortTable('docName')" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)" style="min-width:200px;">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docDate')" data-tip="วันที่ระบุในตัวเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่เอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('cscDate')" data-tip="วันที่ CSC ได้รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ CSC รับ <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('sveDate')" data-tip="วันที่ SVE ได้รับเอกสาร&#10;(เริ่มนับวันค้าง)&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ SVE รับ <span class="sort-arrow">↕</span></th>
@@ -1531,7 +1527,6 @@ function doLogin(){
     isAdmin=true;closeModal('loginModal');
     ['adminToggleBtn','adminToggleBtn2'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.add('active');b.querySelector('span:last-child').textContent='Admin Mode';}});
     document.getElementById('adminInline').classList.add('visible');
-    document.getElementById('mainToolbar').classList.add('admin-active');
     document.getElementById('addBtn').style.display='inline-flex';
     document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
     renderTable();showToast('Admin Mode เปิดใช้งานแล้ว','success');
@@ -1541,7 +1536,6 @@ function logout(){
   isAdmin=false;
   ['adminToggleBtn','adminToggleBtn2'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.remove('active');b.querySelector('span:last-child').textContent='Admin Login';}});
   document.getElementById('adminInline').classList.remove('visible');
-  document.getElementById('mainToolbar').classList.remove('admin-active');
   document.getElementById('addBtn').style.display='none';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display='none');
   renderTable();showToast('ออกจาก Admin Mode แล้ว','info');
