@@ -749,7 +749,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                 <col style="width:44px"/>   <!-- # -->
                 <col style="width:90px"/>   <!-- เลขที่ CSC -->
                 <col style="width:140px"/>  <!-- เลขที่เอกสาร -->
-                <col/>                      <!-- ชื่อเอกสาร (flex-fill) -->
+                <col style="width:30%"/>    <!-- ชื่อเอกสาร (percentage so it always gets real space) -->
                 <col style="width:90px"/>   <!-- วันที่เอกสาร -->
                 <col style="width:90px"/>   <!-- CSC รับ -->
                 <col style="width:90px"/>   <!-- SVE รับ -->
@@ -757,7 +757,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                 <col style="width:75px"/>   <!-- ค้างวัน -->
                 <col style="width:145px"/>  <!-- สถานะ -->
                 <col style="width:90px"/>   <!-- ผู้รับผิดชอบ -->
-                <col style="width:160px"/>  <!-- หมายเหตุ -->
+                <col/>                      <!-- หมายเหตุ (fills remainder) -->
                 <col style="width:70px"/>   <!-- Admin actions -->
               </colgroup>
               <thead>
@@ -765,7 +765,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
                   <th style="width:44px;text-align:center;">#</th>
                   <th onclick="sortTable('cscReceivedNumber')" data-tip="เลขที่ CSC รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่ CSC <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docNumber')" data-tip="เลขที่เอกสารของผู้ส่ง&#10;(คลิกเพื่อเรียงลำดับ)">เลขที่เอกสาร <span class="sort-arrow">↕</span></th>
-                  <th onclick="sortTable('docName')" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)" style="min-width:200px;">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortTable('docName')" data-tip="ชื่อหรือหัวข้อเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">ชื่อเอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('docDate')" data-tip="วันที่ระบุในตัวเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่เอกสาร <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('cscDate')" data-tip="วันที่ CSC ได้รับเอกสาร&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ CSC รับ <span class="sort-arrow">↕</span></th>
                   <th onclick="sortTable('sveDate')" data-tip="วันที่ SVE ได้รับเอกสาร&#10;(เริ่มนับวันค้าง)&#10;(คลิกเพื่อเรียงลำดับ)">วันที่ SVE รับ <span class="sort-arrow">↕</span></th>
@@ -1405,7 +1405,7 @@ function renderUrgentPage(){
             <col style="width:44px"/>   <!-- # -->
             <col style="width:90px"/>   <!-- เลขที่ CSC -->
             <col style="width:140px"/>  <!-- เลขที่เอกสาร -->
-            <col/>                      <!-- ชื่อเอกสาร (flex-fill) -->
+            <col style="width:30%"/>    <!-- ชื่อเอกสาร (percentage) -->
             <col style="width:90px"/>   <!-- วันที่ SVE รับ -->
             <col style="width:80px"/>   <!-- ค้างวัน -->
             <col style="width:145px"/>  <!-- สถานะ -->
