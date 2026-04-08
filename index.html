@@ -314,7 +314,7 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 }
 .tbl-scroll{overflow-x:auto;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;}
 .tbl-scroll table{flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   padding:9px 12px;text-align:left;font-size:11px;font-weight:600;
   color:var(--ink3);background:var(--surface2);
@@ -749,19 +749,19 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
           <div class="tbl-scroll" id="tblScroll">
             <table>
               <colgroup id="colGroup">
-                <col style="width:44px"/>  <!-- # -->
-                <col style="width:90px"/>  <!-- เลขที่ CSC -->
-                <col style="width:140px"/> <!-- เลขที่เอกสาร -->
-                <col style="width:220px"/> <!-- ชื่อเอกสาร -->
-                <col style="width:90px"/>  <!-- วันที่เอกสาร -->
-                <col style="width:90px"/>  <!-- CSC รับ -->
-                <col style="width:90px"/>  <!-- SVE รับ -->
-                <col style="width:90px"/>  <!-- SVE ส่ง -->
-                <col style="width:75px"/>  <!-- ค้างวัน -->
-                <col style="width:145px"/> <!-- สถานะ -->
-                <col style="width:90px"/>  <!-- ผู้รับผิดชอบ -->
-                <col/>                     <!-- หมายเหตุ (auto-fill) -->
-                <col style="width:70px"/>  <!-- Admin actions -->
+                <col style="width:44px"/>   <!-- # -->
+                <col style="width:90px"/>   <!-- เลขที่ CSC -->
+                <col style="width:140px"/>  <!-- เลขที่เอกสาร -->
+                <col/>                      <!-- ชื่อเอกสาร (flex-fill) -->
+                <col style="width:90px"/>   <!-- วันที่เอกสาร -->
+                <col style="width:90px"/>   <!-- CSC รับ -->
+                <col style="width:90px"/>   <!-- SVE รับ -->
+                <col style="width:90px"/>   <!-- SVE ส่ง -->
+                <col style="width:75px"/>   <!-- ค้างวัน -->
+                <col style="width:145px"/>  <!-- สถานะ -->
+                <col style="width:90px"/>   <!-- ผู้รับผิดชอบ -->
+                <col style="width:160px"/>  <!-- หมายเหตุ -->
+                <col style="width:70px"/>   <!-- Admin actions -->
               </colgroup>
               <thead>
                 <tr id="headerRow">
@@ -1405,7 +1405,51 @@ function renderUrgentPanel(){
 function renderUrgentPage(){
   const items=getUrgentDocs();
   if(!items.length){document.getElementById('urgentFullList').innerHTML='<div class="panel" style="padding:30px;text-align:center;color:var(--ink3);">ไม่มีเอกสารล่าช้า ✓</div>';return;}
-  document.getElementById('urgentFullList').innerHTML=`<div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>#</th><th>เลขที่ CSC</th><th>ชื่อเอกสาร</th><th>วันที่ SVE รับ</th><th>ค้างวัน</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody>${items.map((d,i)=>{const p=calcPending(d.sveDate,d.sendDate);const cls=p>=21?'pending-urgent':'pending-warn';return `<tr class="urgent-row"><td class="row-num">${i+1}</td><td><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td><td><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td><td><span class="date-cell">${fmtDate(d.sveDate)}</span></td><td><div class="pending-wrap"><span class="pending-badge ${cls}">${p}</span><span class="pending-label">วัน</span></div></td><td><span class="badge ${badgeClass(d.status)}">${escHtml(d.status)}</span></td><td>${escHtml(d.action||'—')}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+  document.getElementById('urgentFullList').innerHTML=`
+    <div class="tbl-wrap">
+      <div class="tbl-scroll" style="display:block;">
+        <table>
+          <colgroup>
+            <col style="width:44px"/>   <!-- # -->
+            <col style="width:90px"/>   <!-- เลขที่ CSC -->
+            <col style="width:140px"/>  <!-- เลขที่เอกสาร -->
+            <col/>                      <!-- ชื่อเอกสาร (flex-fill) -->
+            <col style="width:90px"/>   <!-- วันที่ SVE รับ -->
+            <col style="width:80px"/>   <!-- ค้างวัน -->
+            <col style="width:145px"/>  <!-- สถานะ -->
+            <col style="width:100px"/>  <!-- ผู้รับผิดชอบ -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="text-align:center;">#</th>
+              <th>เลขที่ CSC</th>
+              <th>เลขที่เอกสาร</th>
+              <th>ชื่อเอกสาร</th>
+              <th>วันที่ SVE รับ</th>
+              <th>ค้างวัน</th>
+              <th>สถานะ</th>
+              <th>ผู้รับผิดชอบ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((d,i)=>{
+              const p=calcPending(d.sveDate,d.sendDate);
+              const cls=p>=21?'pending-urgent':'pending-warn';
+              return `<tr class="urgent-row">
+                <td class="row-num td-nowrap">${i+1}</td>
+                <td class="td-nowrap"><span class="doc-number">${escHtml(d.cscReceivedNumber||'')}</span></td>
+                <td class="td-nowrap"><span class="doc-number">${escHtml(d.docNumber||'')}</span></td>
+                <td class="td-wrap"><div class="doc-name" title="${escHtml(d.docName)}">${escHtml(d.docName)}</div></td>
+                <td class="td-nowrap"><span class="date-cell">${fmtDate(d.sveDate)}</span></td>
+                <td class="td-nowrap"><div class="pending-wrap"><span class="pending-badge ${cls}">${p}</span><span class="pending-label">วัน</span></div></td>
+                <td class="td-nowrap"><span class="badge ${badgeClass(d.status)}">${escHtml(d.status)}</span></td>
+                <td class="td-nowrap"><span class="action-person">${escHtml(d.action||'—')}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
