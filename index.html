@@ -271,16 +271,23 @@ body{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg
 .chip-w{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--amber-bg);color:var(--amber);font-weight:500;display:inline-block;margin-top:2px;}
 
 /* ═══════════════════════════════════════════
-   ADMIN BAR
+   ADMIN INLINE (in toolbar)
 ═══════════════════════════════════════════ */
-.admin-bar{
-  display:none;align-items:center;gap:8px;
-  padding:10px 14px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:var(--radius-lg);
-  margin-bottom:12px;flex-wrap:wrap;
+.admin-inline{
+  display:none;align-items:center;gap:6px;flex-shrink:0;
 }
-.admin-bar.visible{display:flex;}
-.admin-bar-label{font-size:12px;font-weight:600;color:var(--accent);margin-right:4px;}
+.admin-inline.visible{display:flex;}
+.admin-inline-label{
+  font-size:11px;font-weight:700;color:var(--accent);
+  background:var(--accent-dim);border:1px solid var(--accent-glow);
+  border-radius:var(--radius);padding:4px 9px;white-space:nowrap;
+}
+
+/* search shrinks when admin controls are visible */
+#searchWrap{transition:flex 0.2s ease,min-width 0.2s ease;}
+#mainToolbar.admin-active #searchWrap{flex:0 1 220px;min-width:140px;}
+/* addBtn hidden until admin login */
+#addBtn{display:none;}
 
 /* ═══════════════════════════════════════════
    TOOLBAR + TABLE
@@ -685,7 +692,7 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
     </div>
     <div class="topbar-right">
       <div class="pill-live">● Live</div>
-      <button class="btn btn-sm" id="refreshBtn" onclick="refreshData()" data-tip="ซิงค์ข้อมูลล่าสุดจาก&#10;Google Sheets">
+      <button class="btn btn-sm" id="refreshBtn" onclick="refreshData()" data-tip="ซิงค์ฐานข้อมูลล่าสุด">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         ซิงค์
       </button>
@@ -707,25 +714,19 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
       <div class="dashboard-static">
         <div class="kpi-grid" id="statsGrid"></div>
 
-        <!-- ADMIN BAR -->
-        <div class="admin-bar" id="adminBar">
-          <span class="admin-bar-label">⚡ Admin Mode</span>
-          <button class="btn btn-sm btn-accent" id="addBtn" onclick="openAddModal()" style="display:none;" data-tip="เพิ่มเอกสารใหม่เข้า Google Sheets">+ เพิ่มเอกสาร</button>
-          <div class="dropdown-wrap">
-            <button class="btn btn-sm" onclick="toggleDropdown('backupDrop')">📦 Backup ▾</button>
-            <div class="dropdown-menu" id="backupDrop">
-              <div class="dropdown-item" onclick="backupData();closeDropdowns()">💾 Backup JSON</div>
-              <div class="dropdown-item" onclick="document.getElementById('restoreFile').click();closeDropdowns()">📂 Restore JSON</div>
-            </div>
-          </div>
-        </div>
+        <!-- ADMIN BAR (hidden — admin controls now inline in toolbar) -->
 
         <!-- TOOLBAR -->
-        <div class="toolbar">
-          <div class="search-wrap" data-tip="ค้นหาด้วย ชื่อเอกสาร&#10;เลขที่เอกสาร หรือ เลขที่ CSC">
+        <div class="toolbar" id="mainToolbar">
+          <div class="search-wrap" id="searchWrap" data-tip="ค้นหาด้วย ชื่อเอกสาร&#10;เลขที่เอกสาร หรือ เลขที่ CSC">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input class="search-input" id="searchInput" type="text" placeholder="ค้นหาชื่อเอกสาร, เลขที่..." oninput="onSearchInput()"/>
             <button class="search-clear" id="searchClear" onclick="clearSearch()" data-tip="ล้างคำค้นหา">✕</button>
+          </div>
+          <!-- Admin inline controls (shown only in admin mode) -->
+          <div class="admin-inline" id="adminInline">
+            <span class="admin-inline-label">⚡ Admin</span>
+            <button class="btn btn-sm btn-accent" id="addBtn" onclick="openAddModal()" data-tip="เพิ่มเอกสารใหม่">+ เพิ่มเอกสาร</button>
           </div>
           <select class="filter-select" id="statusFilter" onchange="currentPage=1;renderTable();renderStats();" data-tip="กรองตามสถานะการพิจารณา">
             <option value="">สถานะทั้งหมด</option>
@@ -987,10 +988,6 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
             <span><b>Cancelled</b> — ยกเลิกแล้ว</span>
           </div>
         </div>
-        <div>
-          <div style="font-weight:700;color:var(--accent);margin-bottom:4px;">📦 Backup / Restore</div>
-          <div>ใช้เมนู Backup ใน Admin Bar เพื่อสำรองข้อมูลเป็นไฟล์ JSON และ Restore เมื่อต้องการนำเข้าคืน</div>
-        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1002,10 +999,9 @@ td.td-nowrap{white-space:nowrap;overflow:visible!important;}
 <div id="sve-tip"></div>
 <div id="loadingBar">
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-  <span id="loadingMsg">กำลังซิงก์กับ Google Sheets...</span>
+  <span id="loadingMsg">กำลังซิงค์ฐานข้อมูล...</span>
 </div>
 <div class="toast-container" id="toastContainer"></div>
-<input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreData(event)"/>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -1137,7 +1133,7 @@ function gsToDoc(rec) {
   return { id:String(rec.id||''), docName:rec.docName||'', docNumber:rec.docNumber||'', cscReceivedNumber:rec.cscReceivedNumber||'', docDate:normalizeDate(rec.docDate), cscDate:normalizeDate(rec.cscDate), sveDate:normalizeDate(rec.sveDate), sendDate:normalizeDate(rec.sendDate), status:rec.status||'Under Review', action:rec.action||'', notes:rec.notes||'' };
 }
 async function loadDocs() {
-  setLoading(true, 'กำลังซิงก์กับ Google Sheets...');
+  setLoading(true, 'กำลังซิงค์ฐานข้อมูล...');
   docs = [];
   try { const data = await gsGet(); docs = (data.records || []).map(gsToDoc); renderTable(); renderStats(); renderDonut(); renderUrgentPanel(); renderUrgentBadge(); }
   catch(e) { showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message, 'error'); renderTable(); }
@@ -1534,8 +1530,9 @@ function doLogin(){
   if(document.getElementById('loginPass').value===ADMIN_PASSWORD){
     isAdmin=true;closeModal('loginModal');
     ['adminToggleBtn','adminToggleBtn2'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.add('active');b.querySelector('span:last-child').textContent='Admin Mode';}});
-    document.getElementById('adminBar').classList.add('visible');
-    document.getElementById('addBtn').style.display='';
+    document.getElementById('adminInline').classList.add('visible');
+    document.getElementById('mainToolbar').classList.add('admin-active');
+    document.getElementById('addBtn').style.display='inline-flex';
     document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
     renderTable();showToast('Admin Mode เปิดใช้งานแล้ว','success');
   } else { document.getElementById('loginError').classList.add('show'); document.getElementById('loginPass').focus(); }
@@ -1543,7 +1540,8 @@ function doLogin(){
 function logout(){
   isAdmin=false;
   ['adminToggleBtn','adminToggleBtn2'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.remove('active');b.querySelector('span:last-child').textContent='Admin Login';}});
-  document.getElementById('adminBar').classList.remove('visible');
+  document.getElementById('adminInline').classList.remove('visible');
+  document.getElementById('mainToolbar').classList.remove('admin-active');
   document.getElementById('addBtn').style.display='none';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display='none');
   renderTable();showToast('ออกจาก Admin Mode แล้ว','info');
@@ -1574,16 +1572,16 @@ function buildPayload(){
 }
 async function saveDoc(){const payload=buildPayload();if(!payload)return;document.getElementById('saveDocBtn').disabled=true;closeModal('docModal');setLoading(true,editingId?'กำลังอัปเดตเอกสาร...':'กำลังเพิ่มเอกสารใหม่...');if(editingId){try{const updated=await atUpdate(editingId,payload);const idx=docs.findIndex(x=>x.id===editingId);if(idx>=0)docs[idx]=updated;else docs.unshift(updated);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('อัปเดตเอกสารเรียบร้อยแล้ว','success');}catch(e){showToast('อัปเดตไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}else{try{const created=await atCreate(payload);docs.unshift(created);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('เพิ่มเอกสารใหม่เรียบร้อยแล้ว','success');}catch(e){showToast('เพิ่มเอกสารไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}}
 function openDeleteConfirm(id){const d=docs.find(x=>x.id===id);if(!d)return;deleteTargetId=id;document.getElementById('deleteDocName').textContent=d.docName;document.getElementById('confirmDeleteBtn').disabled=false;openModal('confirmModal');}
-async function confirmDelete(){const id=deleteTargetId;document.getElementById('confirmDeleteBtn').disabled=true;closeModal('confirmModal');setLoading(true,'กำลังลบเอกสารออกจาก Google Sheets...');try{await atDelete(id);docs=docs.filter(x=>x.id!==id);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('ลบเอกสารเรียบร้อยแล้ว','info');}catch(e){showToast('ลบไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}
+async function confirmDelete(){const id=deleteTargetId;document.getElementById('confirmDeleteBtn').disabled=true;closeModal('confirmModal');setLoading(true,'กำลังลบเอกสาร...');try{await atDelete(id);docs=docs.filter(x=>x.id!==id);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('ลบเอกสารเรียบร้อยแล้ว','info');}catch(e){showToast('ลบไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  EXPORT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function getLogoDataUrl(){if(LOGO_SRC&&LOGO_SRC.startsWith('data:'))return Promise.resolve(LOGO_SRC);return Promise.resolve('');}
 async function exportPDF(){const filtered=getFiltered();const logoDataUrl=await getLogoDataUrl();const sf=document.getElementById('statusFilter').value;const sq=document.getElementById('searchInput').value.trim();let fp=[];if(sf)fp.push(`สถานะ: ${sf}`);if(sq)fp.push(`ค้นหา: "${sq}"`);const filterLabel=fp.length?fp.join('  |  '):'ทั้งหมด';const logoHtml=logoDataUrl?`<img src="${logoDataUrl}" style="height:40px;width:auto;object-fit:contain;display:block;"/>`:`<div style="font-size:18px;font-weight:800;color:#1a2a3a;">SVE DocTrack</div>`;const rows=filtered.map((d,i)=>{const p=calcPending(d.sveDate,d.sendDate);const isUrgent=d.sveDate&&!d.sendDate&&p!==null&&p>=14;const dStyle=isUrgent?'color:#b83223;font-weight:700;':(p!==null&&p>=7?'color:#c47d10;font-weight:600;':'');const sc={'Under Review':'#1a3a5c','Approved':'#0a3530','Approve by Comments':'#3d2e08','Revise & Resubmit':'#2d1f50','Rejected':'#4a1515','Cancelled':'#2a2a2a'};const stc={'Under Review':'#4a9eff','Approved':'#00c7b7','Approve by Comments':'#f5a623','Revise & Resubmit':'#b794f4','Rejected':'#ff6b6b','Cancelled':'#888888'};return `<tr style="background:${i%2===0?'#fff':'#f5f7fa'};"><td style="text-align:center;color:#888;font-size:11px;">${i+1}</td><td style="white-space:nowrap;font-family:monospace;font-size:11px;color:#1a5c8a;">${d.cscReceivedNumber||'—'}</td><td style="white-space:nowrap;font-family:monospace;font-size:11px;color:#1a5c8a;">${d.docNumber||'—'}</td><td>${d.docName||'—'}</td><td style="white-space:nowrap;text-align:center;">${fmtDate(d.docDate)||'—'}</td><td style="white-space:nowrap;text-align:center;">${fmtDate(d.cscDate)||'—'}</td><td style="white-space:nowrap;text-align:center;">${fmtDate(d.sveDate)||'—'}</td><td style="white-space:nowrap;text-align:center;">${fmtDate(d.sendDate)||'—'}</td><td style="text-align:center;${dStyle}">${p!==null?p+' วัน':'—'}</td><td><span style="background:${sc[d.status]||'#1a1a1a'};color:${stc[d.status]||'#fff'};padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;white-space:nowrap;">${d.status}</span></td><td>${d.action||'—'}</td><td style="color:#666;font-size:11px;">${d.notes||'—'}</td></tr>`;}).join('');const html=`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"/><style>@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Sarabun',sans-serif;font-size:10px;color:#1a1a1a;background:#fff;padding:12px;}.report-header{display:flex;align-items:center;gap:16px;margin-bottom:10px;border-bottom:2px solid #1a2a3a;padding-bottom:8px;}.report-title{font-size:15px;font-weight:700;color:#1a2a3a;margin-bottom:3px;}.report-meta{font-size:9.5px;color:#666;display:flex;gap:16px;flex-wrap:wrap;margin-top:3px;}table{width:100%;border-collapse:collapse;font-size:9.5px;table-layout:fixed;}thead tr{background:#1a2a3a!important;}thead th{color:#fff;padding:6px;text-align:left;font-weight:600;font-size:9px;white-space:nowrap;border:1px solid #2d3d4d;}tbody td{padding:5px 6px;border:1px solid #e0e0e0;vertical-align:middle;line-height:1.4;word-break:break-word;}@page{size:A4 landscape;margin:10mm 8mm 14mm 8mm;}@media print{body{padding:0;}thead{display:table-header-group;}}</style></head><body><div class="report-header">${logoHtml}<div style="margin-left:4px;"><div class="report-title">Document Status Report</div><div class="report-meta"><span>📅 ${new Date().toLocaleString('th-TH')}</span><span>🔍 ${filterLabel}</span><span>📄 ${filtered.length} รายการ</span></div></div></div><table><thead><tr><th style="width:28px;text-align:center;">#</th><th style="width:7%;">เลขรับ CSC</th><th style="width:14%;">เลขที่เอกสาร</th><th style="width:22%;">ชื่อเอกสาร</th><th style="width:6%;text-align:center;">วันที่เอกสาร</th><th style="width:6%;text-align:center;">CSC รับ</th><th style="width:6%;text-align:center;">SVE รับ</th><th style="width:7%;text-align:center;">SVE ส่งออก</th><th style="width:5%;text-align:center;">วัน</th><th style="width:13%;">สถานะ</th><th style="width:7%;">ผู้รับผิดชอบ</th><th>หมายเหตุ</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>{window.print();}<\/script></body></html>`;const win=window.open('','_blank');win.document.write(html);win.document.close();showToast('กำลังเปิดหน้า PDF — กด Print เพื่อบันทึก','info');}
-async function backupData(){showToast('กำลัง Backup...','info');try{const data=await gsGet();const allDocs=(data.records||[]).map(gsToDoc);downloadBlob(JSON.stringify({version:3,exported:new Date().toISOString(),source:'google-sheets',docs:allDocs},null,2),'sve_doctrack_backup_'+today()+'.json','application/json');showToast(`Backup สำเร็จ — ${allDocs.length} รายการ`,'success');}catch(e){showToast('Backup ไม่สำเร็จ: '+e.message,'error');}}
-function restoreData(e){const file=e.target.files[0];if(!file)return;if(!isAdmin){showToast('ต้อง Login Admin ก่อน','error');return;}const reader=new FileReader();reader.onload=async(ev)=>{try{const obj=JSON.parse(ev.target.result);if(!Array.isArray(obj.docs)||!obj.docs.length){showToast('ไฟล์ไม่ถูกต้อง','error');return;}if(!confirm(`นำเข้า ${obj.docs.length} รายการเข้า Google Sheets?`))return;setLoading(true,'กำลัง Restore...');showToast('กำลัง Restore...','info');for(const d of obj.docs)await atCreate(d);await loadDocs();showToast('Restore สำเร็จ','success');}catch(err){showToast('Restore ไม่สำเร็จ: '+err.message,'error');}finally{setLoading(false);}};reader.readAsText(file);e.target.value='';}
-function downloadBlob(content,filename,mime){const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
+async function backupData(){} // removed
+function restoreData(e){e.target.value='';}
+function downloadBlob(){}
 function today(){return new Date().toISOString().slice(0,10).replace(/-/g,'');}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
