@@ -1116,12 +1116,15 @@ function normalizeDate(val) {
     const dt = new Date(Date.UTC(1899,11,30) + serial * 86400000);
     return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}/${dt.getUTCFullYear()}`;
   }
-  // fallback: try Date parse with UTC to avoid timezone offset
-  const dt = new Date(s);
+  // fallback: support "dd-mm-yyyy" dash variants
+  if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
+    const [d,m,y]=s.split('-');
+    return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
+  }
+  // last resort: force UTC parse to neutralize timezone shift
+  const dt = new Date(s.includes('T') ? s : s + 'T00:00:00Z');
   if (!isNaN(dt.getTime())) {
-    // adjust for local timezone to get the "wall clock" date
-    const local = new Date(dt.getTime() + dt.getTimezoneOffset() * 60000);
-    return `${String(local.getDate()).padStart(2,'0')}/${String(local.getMonth()+1).padStart(2,'0')}/${local.getFullYear()}`;
+    return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}/${dt.getUTCFullYear()}`;
   }
   return s;
 }
@@ -1546,6 +1549,13 @@ function logout(){
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function openAddModal(){editingId=null;document.getElementById('modalTitle').textContent='เพิ่มเอกสารใหม่';['f_docName','f_docNumber','f_cscReceivedNumber','f_notes','f_action'].forEach(id=>document.getElementById(id).value='');['f_docDate','f_cscDate','f_sveDate','f_sendDate'].forEach(id=>document.getElementById(id).value='');document.getElementById('f_status').value='Under Review';document.getElementById('saveDocBtn').disabled=false;openModal('docModal');setTimeout(()=>document.getElementById('f_docName').focus(),200);}
 function openEditModal(id){const d=docs.find(x=>x.id===id);if(!d)return;editingId=id;document.getElementById('modalTitle').textContent='แก้ไขเอกสาร';document.getElementById('f_docName').value=d.docName;document.getElementById('f_docNumber').value=d.docNumber;document.getElementById('f_cscReceivedNumber').value=d.cscReceivedNumber||'';document.getElementById('f_docDate').value=d.docDate||'';document.getElementById('f_cscDate').value=d.cscDate||'';document.getElementById('f_sveDate').value=d.sveDate||'';document.getElementById('f_sendDate').value=d.sendDate||'';document.getElementById('f_status').value=d.status;document.getElementById('f_notes').value=d.notes||'';document.getElementById('f_action').value=d.action||'';document.getElementById('saveDocBtn').disabled=false;openModal('docModal');}
+// แปลง dd/mm/yyyy → yyyy-mm-dd (ISO) ก่อนส่งเข้า Google Sheets
+function toIsoDate(val) {
+  if (!val) return '';
+  const m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return val;
+}
 function buildPayload(){
   const docName=document.getElementById('f_docName').value.trim(); const docNumber=document.getElementById('f_docNumber').value.trim();
   if(!docName||!docNumber){showToast('กรุณากรอกชื่อเอกสารและเลขที่เอกสาร','error');return null;}
@@ -1562,7 +1572,7 @@ function buildPayload(){
       return null;
     }
   }
-  return {docName,docNumber,cscReceivedNumber:document.getElementById('f_cscReceivedNumber').value.trim(),docDate:document.getElementById('f_docDate').value.trim()||'',cscDate:document.getElementById('f_cscDate').value.trim()||'',sveDate,sendDate:document.getElementById('f_sendDate').value.trim()||'',status:document.getElementById('f_status').value,notes:document.getElementById('f_notes').value.trim(),action:document.getElementById('f_action').value.trim()};
+  return {docName,docNumber,cscReceivedNumber:document.getElementById('f_cscReceivedNumber').value.trim(),docDate:toIsoDate(document.getElementById('f_docDate').value.trim()),cscDate:toIsoDate(document.getElementById('f_cscDate').value.trim()),sveDate:toIsoDate(sveDate),sendDate:toIsoDate(document.getElementById('f_sendDate').value.trim()),status:document.getElementById('f_status').value,notes:document.getElementById('f_notes').value.trim(),action:document.getElementById('f_action').value.trim()};
 }
 async function saveDoc(){const payload=buildPayload();if(!payload)return;document.getElementById('saveDocBtn').disabled=true;closeModal('docModal');setLoading(true,editingId?'กำลังอัปเดตเอกสาร...':'กำลังเพิ่มเอกสารใหม่...');if(editingId){try{const updated=await atUpdate(editingId,payload);const idx=docs.findIndex(x=>x.id===editingId);if(idx>=0)docs[idx]=updated;else docs.unshift(updated);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('อัปเดตเอกสารเรียบร้อยแล้ว','success');}catch(e){showToast('อัปเดตไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}else{try{const created=await atCreate(payload);docs.unshift(created);renderTable();renderStats();renderDonut();renderUrgentPanel();renderUrgentBadge();showToast('เพิ่มเอกสารใหม่เรียบร้อยแล้ว','success');}catch(e){showToast('เพิ่มเอกสารไม่สำเร็จ: '+e.message,'error');await loadDocs();}finally{setLoading(false);}}}
 function openDeleteConfirm(id){const d=docs.find(x=>x.id===id);if(!d)return;deleteTargetId=id;document.getElementById('deleteDocName').textContent=d.docName;document.getElementById('confirmDeleteBtn').disabled=false;openModal('confirmModal');}
