@@ -1104,27 +1104,22 @@ function normalizeDate(val) {
     const [d,m,y]=s.split('/');
     return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
   }
-  // yyyy-mm-dd (ISO) — parse directly, no Date() to avoid timezone shift
+  // yyyy-mm-dd or "yyyy-mm-dd HH:mm:ss" (Apps Script local-time string)
+  // slice 10 ตัวแรก = yyyy-mm-dd เท่านั้น ไม่โดน timezone shift
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
     const [y,m,d]=s.substring(0,10).split('-');
-    return `${d}/${m}/${y}`;
+    return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
   }
   // Google Sheets serial number (number only)
   if (/^\d+$/.test(s)) {
     const serial = parseInt(s);
-    // Excel/Sheets epoch: Jan 1 1900 = 1 (with Lotus bug: treats 1900 as leap)
     const dt = new Date(Date.UTC(1899,11,30) + serial * 86400000);
     return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}/${dt.getUTCFullYear()}`;
   }
-  // fallback: support "dd-mm-yyyy" dash variants
+  // dd-mm-yyyy dash variant
   if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
     const [d,m,y]=s.split('-');
     return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
-  }
-  // last resort: force UTC parse to neutralize timezone shift
-  const dt = new Date(s.includes('T') ? s : s + 'T00:00:00Z');
-  if (!isNaN(dt.getTime())) {
-    return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}/${dt.getUTCFullYear()}`;
   }
   return s;
 }
